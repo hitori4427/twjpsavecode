@@ -1,0 +1,2644 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#b06367">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>OC宿舍 · 角色存檔管家</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+TC:wght@400;500;700&family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.1/dist/cropper.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.1/dist/cropper.min.js"></script>
+<style>
+  :root {
+    --bg: #faf7f2;
+    --bg-soft: #f3ede4;
+    --bg-warm: #f7efe4;
+    --card: #ffffff;
+    --card-2: #fdfaf5;
+    --border: #e9e0d0;
+    --line-soft: #ede6d8;
+    --ink: #2a2030;
+    --ink-2: #5a4f5e;
+    --ink-3: #8a8090;
+    --ink-4: #b8b0bc;
+    --rose: #b06367;
+    --rose-deep: #8e4854;
+    --rose-soft: #ecd6d8;
+    --rose-bg: #f7e6e8;
+    --gold: #c9a961;
+    --gold-soft: #f1e6cc;
+    --gold-deep: #a48a48;
+    --purple: #9d7ec9;
+    --purple-soft: #e8dff5;
+    --pink: #e08aaa;
+    --pink-soft: #fae0ea;
+    --teal: #2f6f5e;
+    --danger: #c8553d;
+    --success: #5a8a4f;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { background: var(--bg); height: 100%; }
+  body {
+    font-family: 'Noto Sans TC', 'Outfit', system-ui, sans-serif;
+    color: var(--ink);
+    line-height: 1.55;
+    font-size: 15px;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; font-size: inherit; }
+  input, textarea, select { font-family: inherit; font-size: inherit; }
+
+  .app {
+    max-width: 480px;
+    margin: 0 auto;
+    min-height: 100vh;
+    background: var(--bg);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 72px;
+    box-shadow: 0 0 40px rgba(0,0,0,0.06);
+  }
+
+  .topbar {
+    position: sticky; top: 0; z-index: 50;
+    background: linear-gradient(180deg, var(--bg) 0%, rgba(250,247,242,0.95) 100%);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    padding: 14px 18px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+  .topbar .brand { display: flex; align-items: center; gap: 10px; }
+  .topbar .logo {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, var(--rose) 0%, var(--purple) 100%);
+    border-radius: 11px;
+    display: grid; place-items: center;
+    color: white;
+    font-family: 'DM Serif Display', serif;
+    font-size: 17px;
+    position: relative;
+    box-shadow: 0 4px 10px rgba(176, 99, 103, 0.25);
+  }
+  .logo::before {
+    content: "✦";
+    position: absolute;
+    top: -3px; right: -3px;
+    width: 12px; height: 12px;
+    background: var(--gold);
+    color: white;
+    border-radius: 50%;
+    display: grid; place-items: center;
+    font-size: 7px;
+    border: 1.5px solid var(--bg);
+  }
+  .topbar .name { font-weight: 600; font-size: 15px; }
+  .topbar .name small { display: block; font-size: 10px; color: var(--ink-3); font-weight: 400; }
+  .topbar .acts { display: flex; gap: 6px; }
+  .topbar .act-btn {
+    width: 36px; height: 36px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    display: grid; place-items: center;
+    color: var(--ink-2);
+    transition: all 0.15s;
+  }
+  .topbar .act-btn.lang-btn {
+    width: auto; min-width: 36px; padding: 0 10px;
+    font-size: 13px; font-weight: 600;
+  }
+  .topbar .act-btn:hover { background: var(--rose-bg); color: var(--rose); }
+  .topbar .act-btn.lang-btn.active { background: var(--rose-bg); color: var(--rose-deep); }
+  .topbar .act-btn svg { width: 18px; height: 18px; }
+
+  .content { flex: 1; padding: 16px 18px; }
+  .view { display: none; }
+  .view.active { display: block; animation: fadeIn 0.2s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+  .hero-banner {
+    background: linear-gradient(135deg, var(--rose) 0%, var(--purple) 60%, #6b5a9b 100%);
+    border-radius: 18px;
+    padding: 20px 22px;
+    color: white;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 18px;
+  }
+  .hero-banner::before {
+    content: "✦";
+    position: absolute;
+    top: 12px; right: 18px;
+    color: var(--gold);
+    font-size: 20px;
+  }
+  .hero-banner::after {
+    content: "";
+    position: absolute;
+    right: -30px; bottom: -30px;
+    width: 120px; height: 120px;
+    background: radial-gradient(circle, rgba(255,255,255,0.12), transparent 70%);
+  }
+  .hero-banner .l { font-size: 10px; opacity: 0.85; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 500; }
+  .hero-banner .v { font-family: 'Noto Serif TC', serif; font-size: 24px; line-height: 1.3; margin-top: 4px; position: relative; z-index: 1; }
+  .hero-banner .v small { display: block; font-size: 12px; font-family: 'Noto Sans TC'; opacity: 0.85; margin-top: 4px; font-weight: 400; }
+  .hero-banner .row { display: flex; gap: 16px; margin-top: 14px; position: relative; z-index: 1; flex-wrap: wrap; }
+  .hero-banner .row .item { flex: 1 1 0; min-width: 50px; }
+  .hero-banner .row .item .v { font-size: 22px; line-height: 1.1; font-family: 'DM Serif Display', serif; }
+  .hero-banner .row .item .l { font-size: 9px; opacity: 0.75; margin-top: 4px; letter-spacing: 0.04em; }
+
+  .quick-row {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 22px;
+  }
+  .quick {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 14px;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.15s;
+    position: relative;
+    overflow: hidden;
+  }
+  .quick:hover, .quick:active {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px -4px rgba(176, 99, 103, 0.2);
+  }
+  .quick::before {
+    content: "✦";
+    position: absolute;
+    top: 8px; right: 10px;
+    color: var(--gold);
+    font-size: 12px;
+    opacity: 0.4;
+  }
+  .quick .ic {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    display: grid; place-items: center;
+    margin-bottom: 8px;
+  }
+  .quick.q1 .ic { background: linear-gradient(135deg, var(--rose-bg), var(--rose-soft)); color: var(--rose-deep); }
+  .quick.q2 .ic { background: linear-gradient(135deg, var(--gold-soft), #f9edcf); color: var(--gold-deep); }
+  .quick .t { font-size: 13px; font-weight: 600; }
+  .quick .s { font-size: 10px; color: var(--ink-3); margin-top: 2px; }
+
+  .sec-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 12px;
+  }
+  .sec-head h2 {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 16px;
+    font-weight: 500;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .sec-head h2::before { content: "✦"; color: var(--gold); font-size: 12px; }
+  .sec-head .more { font-size: 11px; color: var(--ink-3); cursor: pointer; }
+  .sec-head .more:hover { color: var(--rose); }
+
+  .save-list { display: flex; flex-direction: column; gap: 10px; }
+  .save-item {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px;
+    display: flex; align-items: center; gap: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .save-item:hover, .save-item:active {
+    border-color: var(--rose-soft);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px -4px rgba(176, 99, 103, 0.15);
+  }
+  .save-item .ic-circle {
+    width: 56px; height: 56px;
+    border-radius: 14px;
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+    display: grid; place-items: center;
+  }
+  .save-item .ic-circle.bracelet {
+    background: conic-gradient(from 0deg, var(--rose), var(--purple), var(--gold), var(--pink), var(--rose));
+    padding: 3px;
+  }
+  .save-item .ic-circle.bracelet::after {
+    content: "";
+    display: block;
+    width: 100%; height: 100%;
+    background: var(--card-2);
+    border-radius: 11px;
+  }
+  .save-item .ic-circle.bracelet.has-image::after { display: none; }
+  .save-item .ic-circle.bracelet img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    border-radius: 11px;
+  }
+  .save-item .ic-circle.line {
+    background: linear-gradient(135deg, #06c755, #00b900);
+    color: white;
+    font-size: 22px;
+  }
+  .save-item .ic-circle .qr-overlay {
+    position: absolute;
+    inset: 0;
+    display: grid; place-items: center;
+    color: var(--ink-3);
+    font-size: 22px;
+    z-index: 1;
+  }
+  .save-item .ic-circle.bracelet.has-image .qr-overlay { display: none; }
+  .save-item .ic-circle.has-avatar {
+    background: var(--card);
+    padding: 0;
+    border: 1.5px solid var(--border);
+  }
+  .save-item .ic-circle.has-avatar img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    border-radius: 12.5px;
+  }
+  .save-item .ic-circle .type-mini {
+    position: absolute;
+    bottom: -2px; right: -2px;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    display: grid; place-items: center;
+    font-size: 11px;
+    color: white;
+    border: 2px solid var(--card);
+    z-index: 2;
+  }
+  .save-item .ic-circle .type-mini.bracelet { background: var(--gold); }
+  .save-item .ic-circle .type-mini.line { background: #00b900; }
+  .save-item .info { flex: 1; min-width: 0; }
+  .save-item .nm { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .save-item .sub {
+    font-size: 11px; color: var(--ink-3);
+    display: flex; gap: 6px; align-items: center;
+  }
+  .save-item .type-badge {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-size: 9px;
+    font-weight: 600;
+  }
+  .save-item .type-badge.bracelet { background: var(--gold-soft); color: var(--gold-deep); }
+  .save-item .type-badge.line { background: #d6f5e0; color: #00b900; }
+  .save-item .arrow { color: var(--ink-4); }
+
+  .empty {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--ink-3);
+  }
+  .empty .ic { font-size: 40px; margin-bottom: 12px; color: var(--gold); }
+  .empty h3 { font-family: 'Noto Serif TC', serif; font-size: 16px; color: var(--ink-2); margin-bottom: 6px; }
+  .empty p { font-size: 12px; line-height: 1.6; max-width: 280px; margin: 0 auto; }
+  .empty .btn {
+    margin-top: 16px;
+    display: inline-block;
+    padding: 10px 22px;
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  .tabbar {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--card);
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 8px 0 max(8px, env(safe-area-inset-bottom));
+    z-index: 40;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+  .tab {
+    display: flex; flex-direction: column;
+    align-items: center; gap: 3px;
+    font-size: 11px;
+    color: var(--ink-3);
+    padding: 8px 16px;
+    cursor: pointer;
+    border-radius: 10px;
+    transition: all 0.15s;
+    flex: 1;
+  }
+  .tab.active { color: var(--rose); font-weight: 500; }
+  .tab .ic {
+    width: 22px; height: 22px;
+    display: grid; place-items: center;
+  }
+  .tab svg { width: 22px; height: 22px; }
+
+  .modal-bg {
+    position: fixed; inset: 0;
+    background: rgba(20, 20, 30, 0.4);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 100;
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+    animation: fadeIn 0.2s ease;
+  }
+  .modal-bg.active { display: flex; }
+  .modal-bg.center { align-items: center; }
+  .modal {
+    background: var(--bg);
+    width: 100%;
+    max-width: 480px;
+    max-height: 90vh;
+    border-radius: 22px 22px 0 0;
+    overflow-y: auto;
+    animation: slideUp 0.25s ease;
+    padding-bottom: max(20px, env(safe-area-inset-bottom));
+  }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .modal-handle {
+    width: 36px; height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin: 10px auto 6px;
+  }
+  .modal-head {
+    padding: 12px 20px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+  .modal-head h3 {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 18px;
+    font-weight: 500;
+  }
+  .modal-head .close {
+    width: 32px; height: 32px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    display: grid; place-items: center;
+    color: var(--ink-2);
+  }
+  .modal-body { padding: 18px 20px; }
+
+  .field { margin-bottom: 16px; }
+  .field label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--ink-3);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .field input[type="text"], .field textarea, .field select {
+    width: 100%;
+    padding: 11px 14px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 11px;
+    font-size: 14px;
+    color: var(--ink);
+    transition: all 0.15s;
+  }
+  .field input:focus, .field textarea:focus {
+    outline: none;
+    border-color: var(--rose);
+    box-shadow: 0 0 0 3px rgba(176, 99, 103, 0.1);
+  }
+  .field .hint { font-size: 11px; color: var(--ink-3); margin-top: 4px; line-height: 1.5; }
+
+  .img-upload {
+    background: var(--card);
+    border: 2px dashed var(--border);
+    border-radius: 14px;
+    padding: 0;
+    cursor: pointer;
+    overflow: hidden;
+    position: relative;
+    transition: all 0.15s;
+  }
+  .img-upload:hover { border-color: var(--rose); background: var(--rose-bg); }
+  .img-upload.has-image { border-style: solid; border-color: var(--border); }
+  .img-upload img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .img-upload .placeholder {
+    text-align: center;
+    color: var(--ink-3);
+    font-size: 11px;
+    padding: 20px;
+  }
+  .img-upload .placeholder .ic { font-size: 28px; color: var(--gold); margin-bottom: 6px; }
+  .img-upload .placeholder .ttl { font-size: 13px; font-weight: 600; color: var(--ink-2); margin-bottom: 4px; }
+  .img-upload .placeholder .sub { font-size: 11px; line-height: 1.4; }
+
+  .img-upload.qr {
+    aspect-ratio: 1.6/1;
+    max-width: 320px;
+    margin: 0 auto;
+    border-radius: 12px;
+  }
+  .img-upload.qr .placeholder { padding: 24px 16px; }
+  .img-upload.qr .placeholder .ic { font-size: 32px; }
+  .qr-upload-btns {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px;
+    max-width: 320px; margin-left: auto; margin-right: auto;
+  }
+  .qr-upload-btns .btn {
+    padding: 10px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 500;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--ink-2);
+  }
+  .qr-upload-btns .btn.cam { background: var(--ink); color: white; border-color: var(--ink); }
+
+  .avatar-upload {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 18px;
+  }
+  .avatar-upload .av {
+    width: 110px; height: 110px;
+    border-radius: 22px;
+    border: 2px dashed var(--border);
+    background: var(--card);
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.15s;
+  }
+  .avatar-upload .av:hover { border-color: var(--rose); background: var(--rose-bg); }
+  .avatar-upload .av.has-image { border-style: solid; border-color: var(--border); }
+  .avatar-upload .av img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .avatar-upload .av .placeholder {
+    text-align: center;
+    color: var(--ink-3);
+    font-size: 11px;
+    line-height: 1.4;
+  }
+  .avatar-upload .av .placeholder .ic { font-size: 28px; color: var(--gold); margin-bottom: 4px; }
+  .avatar-upload .avatar-btns {
+    display: flex; gap: 6px; margin-top: 10px;
+  }
+  .avatar-upload .btn-mini {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 5px 10px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-size: 11px;
+    color: var(--ink-2);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .avatar-upload .btn-mini:hover { border-color: var(--rose); color: var(--rose); }
+  .avatar-upload .avatar-hint {
+    font-size: 10px; color: var(--ink-3);
+    margin-top: 8px; text-align: center;
+    line-height: 1.4;
+  }
+
+  .source-selector {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .src-opt {
+    padding: 14px 10px;
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .src-opt:hover { border-color: var(--rose-soft); }
+  .src-opt.active {
+    background: linear-gradient(135deg, var(--rose-bg), var(--gold-soft));
+    border-color: var(--rose);
+  }
+  .src-opt .ic { font-size: 24px; margin-bottom: 4px; }
+  .src-opt .t { font-size: 12px; font-weight: 600; color: var(--ink); }
+  .src-opt .s { font-size: 10px; color: var(--ink-3); margin-top: 2px; line-height: 1.3; }
+  .src-opt.active .t { color: var(--rose-deep); }
+
+  .btn-row { display: flex; gap: 10px; padding: 0 20px 20px; }
+  .btn {
+    flex: 1;
+    padding: 13px 18px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 500;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-primary { background: var(--ink); color: var(--bg); }
+  .btn-primary:hover, .btn-primary:active { background: var(--rose-deep); }
+  .btn-ghost { background: var(--card); color: var(--ink-2); border: 1px solid var(--border); }
+  .btn-danger { background: var(--danger); color: white; }
+
+  .detail-hero {
+    aspect-ratio: 5/3;
+    border-radius: 18px;
+    background: linear-gradient(135deg, var(--rose) 0%, var(--purple) 100%);
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 14px;
+    display: grid;
+    place-items: center;
+  }
+  .detail-hero.c-grad-rose { background: linear-gradient(135deg, #e08aaa 0%, var(--rose) 50%, var(--purple) 100%); }
+  .detail-hero.c-grad-line { background: linear-gradient(135deg, #00b900 0%, #06c755 100%); }
+  .detail-hero.has-image { background: var(--bg-soft); }
+  .detail-hero.has-image::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.5));
+  }
+  .detail-hero .hero-img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    position: relative; z-index: 1;
+  }
+  .detail-hero .hero-emoji {
+    font-size: 80px;
+    color: white;
+    text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    z-index: 1;
+  }
+  .detail-hero .back-btn {
+    position: absolute;
+    top: 14px; left: 14px;
+    width: 36px; height: 36px;
+    background: rgba(255,255,255,0.95);
+    border-radius: 50%;
+    display: grid; place-items: center;
+    color: var(--ink);
+    z-index: 3;
+  }
+  .detail-hero .source-chip-overlay {
+    position: absolute;
+    bottom: 14px; right: 14px;
+    padding: 5px 12px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    z-index: 3;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .detail-hero .source-chip-overlay.bracelet {
+    background: rgba(201, 169, 97, 0.9);
+    color: white;
+  }
+  .detail-hero .source-chip-overlay.line {
+    background: rgba(0, 185, 0, 0.9);
+    color: white;
+  }
+  .detail-info {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px;
+    margin-bottom: 14px;
+    text-align: center;
+  }
+  .detail-info .name {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 22px;
+    margin-bottom: 4px;
+  }
+  .detail-info .meta {
+    font-size: 11px;
+    color: var(--ink-3);
+  }
+  .qr-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px;
+    text-align: center;
+    margin-bottom: 14px;
+  }
+  .qr-card .qr-display {
+    width: 100%;
+    max-width: 320px;
+    margin: 0 auto 12px;
+    background: white;
+    border-radius: 8px;
+    padding: 8px;
+    display: grid; place-items: center;
+    min-height: 200px;
+    border: 1px solid var(--border);
+  }
+  .qr-card .qr-display img {
+    width: 100%; height: auto; max-height: 320px; object-fit: contain; display: block;
+  }
+  .qr-card .qr-display .empty-state {
+    color: var(--ink-3);
+    text-align: center;
+    padding: 20px;
+  }
+  .qr-card .qr-display .empty-state .ic { font-size: 32px; color: var(--gold); margin-bottom: 8px; }
+  .qr-card .qr-display .empty-state .t { font-size: 13px; font-weight: 500; color: var(--ink-2); margin-bottom: 4px; }
+  .qr-card .qr-display .empty-state .s { font-size: 11px; }
+  .qr-card .qr-meta {
+    font-size: 10px;
+    color: var(--ink-3);
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.08em;
+  }
+  .qr-card .qr-meta strong { color: var(--ink-2); }
+  .qr-actions {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+  }
+  .qr-actions .btn {
+    padding: 11px;
+    font-size: 13px;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+
+  .arcade-bg {
+    position: fixed; inset: 0;
+    background: linear-gradient(180deg, #1a1a1a 0%, #2a2030 100%);
+    color: white;
+    z-index: 200;
+    display: none;
+    flex-direction: column;
+    padding: 24px 20px max(24px, env(safe-area-inset-bottom));
+  }
+  .arcade-bg.active { display: flex; }
+  .arcade-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .arcade-head .close {
+    width: 40px; height: 40px;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 50%;
+    display: grid; place-items: center;
+    color: white;
+  }
+  .arcade-head .ttl { font-size: 12px; letter-spacing: 0.15em; text-transform: uppercase; opacity: 0.6; }
+  .arcade-head .acts { display: flex; gap: 8px; }
+  .arcade-head .acts button {
+    width: 40px; height: 40px;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 50%;
+    display: grid; place-items: center;
+    color: white;
+  }
+  .arcade-content { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .arcade-content .arcade-avatar {
+    width: 64px; height: 64px;
+    border-radius: 16px;
+    background: rgba(255,255,255,0.1);
+    border: 1.5px solid rgba(255,255,255,0.2);
+    display: grid; place-items: center;
+    margin-bottom: 12px;
+    overflow: hidden;
+  }
+  .arcade-content .arcade-avatar .emoji { font-size: 28px; }
+  .arcade-content .arcade-avatar img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+  }
+  .arcade-content .source-chip-mini {
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    letter-spacing: 0.05em;
+  }
+  .arcade-content .source-chip-mini.bracelet { background: rgba(201, 169, 97, 0.2); color: var(--gold); }
+  .arcade-content .source-chip-mini.line { background: rgba(0, 185, 0, 0.2); color: #4ade80; }
+  .arcade-content .nm {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 22px;
+    margin-bottom: 4px;
+  }
+  .arcade-content .id {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    opacity: 0.5;
+    letter-spacing: 0.1em;
+    margin-bottom: 20px;
+  }
+  .arcade-content .qr-big {
+    background: white;
+    border-radius: 18px;
+    padding: 20px;
+    width: 80%;
+    max-width: 320px;
+    display: grid; place-items: center;
+    box-shadow: 0 20px 60px -10px rgba(201, 169, 97, 0.3);
+  }
+  .arcade-content .qr-big img { width: 100%; height: auto; max-height: 60vh; object-fit: contain; display: block; }
+  .arcade-content .qr-big .empty {
+    color: var(--ink-3);
+    padding: 40px 20px;
+  }
+  .arcade-content .meta {
+    margin-top: 24px;
+    font-size: 11px;
+    opacity: 0.5;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .arcade-tips {
+    margin-top: 24px;
+    padding: 12px 16px;
+    background: rgba(201, 169, 97, 0.12);
+    border: 1px solid rgba(201, 169, 97, 0.25);
+    border-radius: 12px;
+    font-size: 12px;
+    color: var(--gold);
+    text-align: center;
+    max-width: 280px;
+  }
+  .arcade-tips::before { content: "✦ "; }
+
+  .upload-row {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    margin-bottom: 14px;
+  }
+  .upload-btn {
+    padding: 18px 14px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .upload-btn:hover, .upload-btn:active {
+    border-color: var(--rose);
+    transform: translateY(-1px);
+  }
+  .upload-btn.primary {
+    background: var(--ink);
+    color: white;
+    border-color: var(--ink);
+  }
+  .upload-btn .ic { font-size: 24px; margin-bottom: 6px; }
+  .upload-btn.primary .ic { color: var(--gold); }
+  .upload-btn .t { font-size: 13px; font-weight: 600; }
+  .upload-btn .s { font-size: 10px; opacity: 0.7; margin-top: 2px; }
+
+  .scan-area {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2a2030 100%);
+    border-radius: 18px;
+    aspect-ratio: 3/3.2;
+    position: relative;
+    overflow: hidden;
+    display: grid; place-items: center;
+    margin-bottom: 14px;
+  }
+  .scan-area video {
+    width: 100%; height: 100%; object-fit: cover;
+    position: absolute; inset: 0;
+  }
+  .scan-area .scan-frame {
+    width: 220px; height: 220px;
+    position: relative;
+    z-index: 2;
+    border: 2px dashed rgba(232, 184, 220, 0.5);
+    border-radius: 12px;
+  }
+  .scan-area .corner {
+    position: absolute;
+    width: 26px; height: 26px;
+    border: 3px solid var(--pink);
+  }
+  .scan-area .corner.tl { top: -2px; left: -2px; border-right: none; border-bottom: none; border-radius: 8px 0 0 0; }
+  .scan-area .corner.tr { top: -2px; right: -2px; border-left: none; border-bottom: none; border-radius: 0 8px 0 0; }
+  .scan-area .corner.bl { bottom: -2px; left: -2px; border-right: none; border-top: none; border-radius: 0 0 0 8px; }
+  .scan-area .corner.br { bottom: -2px; right: -2px; border-left: none; border-top: none; border-radius: 0 0 8px 0; }
+  .scan-area .scan-hint {
+    position: absolute;
+    bottom: 20px; left: 0; right: 0;
+    text-align: center;
+    color: rgba(255,255,255,0.9);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    z-index: 2;
+  }
+  .scan-area .placeholder {
+    text-align: center; color: rgba(255,255,255,0.85); padding: 20px; z-index: 2;
+  }
+  .scan-area .placeholder .ic { font-size: 50px; color: var(--gold); margin-bottom: 10px; }
+  .scan-area .placeholder p { font-size: 13px; line-height: 1.5; max-width: 240px; margin: 0 auto; }
+  .scan-tip {
+    background: linear-gradient(135deg, var(--rose-bg), var(--gold-soft));
+    border-radius: 12px;
+    padding: 12px 14px;
+    font-size: 12px;
+    color: var(--rose-deep);
+    line-height: 1.6;
+    display: flex; gap: 10px;
+    align-items: flex-start;
+    margin-bottom: 14px;
+  }
+  .scan-tip .ic { color: var(--rose); flex-shrink: 0; }
+  .scan-tip strong { color: var(--rose-deep); font-weight: 600; }
+
+  .settings-section { margin-bottom: 20px; }
+  .settings-section h3 {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink-3);
+    margin-bottom: 10px;
+    font-weight: 600;
+  }
+  .settings-section h3::before { content: "✦ "; color: var(--gold); }
+  .settings-list {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  .settings-item {
+    padding: 14px 16px;
+    display: flex; align-items: center; gap: 12px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .settings-item:last-child { border-bottom: none; }
+  .settings-item:hover { background: var(--rose-bg); }
+  .settings-item .ic {
+    width: 32px; height: 32px;
+    background: var(--rose-bg);
+    color: var(--rose-deep);
+    border-radius: 9px;
+    display: grid; place-items: center;
+    flex-shrink: 0;
+  }
+  .settings-item .info { flex: 1; }
+  .settings-item .t { font-size: 14px; font-weight: 500; }
+  .settings-item .s { font-size: 11px; color: var(--ink-3); margin-top: 2px; }
+  .settings-item .arrow { color: var(--ink-4); }
+
+  .toast {
+    position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--ink);
+    color: var(--bg);
+    padding: 10px 20px;
+    border-radius: 999px;
+    font-size: 13px;
+    z-index: 300;
+    opacity: 0;
+    transition: all 0.3s;
+    pointer-events: none;
+    box-shadow: 0 8px 24px -4px rgba(0,0,0,0.3);
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast.success { background: var(--success); }
+  .toast.error { background: var(--danger); }
+
+  .confirm {
+    background: var(--card);
+    border-radius: 14px;
+    padding: 20px;
+    max-width: 320px;
+    width: 90%;
+    text-align: center;
+  }
+  .confirm h4 { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+  .confirm p { font-size: 13px; color: var(--ink-2); margin-bottom: 16px; line-height: 1.5; }
+  .confirm .row { display: flex; gap: 8px; }
+  .confirm .btn { flex: 1; padding: 10px; }
+
+  .cropper-bg {
+    position: fixed; inset: 0;
+    background: white;
+    z-index: 200;
+    display: none;
+    flex-direction: column;
+  }
+  .cropper-bg.active { display: flex; }
+  .cropper-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    background: white;
+    flex-shrink: 0;
+  }
+  .cropper-head h3 {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 16px;
+    font-weight: 500;
+    flex: 1;
+    text-align: center;
+  }
+  .cropper-head button {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--card);
+    border: 1px solid var(--border);
+    display: grid; place-items: center;
+    color: var(--ink-2);
+    flex-shrink: 0;
+  }
+  .cropper-body {
+    flex: 1;
+    background: #1a1a1a;
+    position: relative;
+    overflow: hidden;
+    min-height: 0;
+  }
+  .cropper-body > img {
+    display: block;
+    max-width: 100%;
+  }
+  .cropper-tip {
+    text-align: center;
+    font-size: 11px;
+    color: rgba(255,255,255,0.7);
+    padding: 8px;
+    background: rgba(0,0,0,0.5);
+    position: absolute;
+    bottom: 10px; left: 0; right: 0;
+    z-index: 10;
+  }
+  .cropper-aspect {
+    display: flex; gap: 6px;
+    padding: 10px 18px;
+    border-top: 1px solid var(--border);
+    background: white;
+    flex-shrink: 0;
+  }
+  .cropper-aspect button {
+    flex: 1;
+    padding: 9px 4px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 12px;
+    color: var(--ink-2);
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .cropper-aspect button.active {
+    background: var(--ink);
+    color: white;
+    border-color: var(--ink);
+  }
+  .cropper-foot {
+    display: flex; gap: 10px;
+    padding: 12px 18px max(12px, env(safe-area-inset-bottom));
+    background: white;
+    flex-shrink: 0;
+  }
+  .cropper-foot .btn { padding: 13px 18px; }
+  .cropper-bg .cropper-container { background: #1a1a1a; }
+  .cropper-bg .cropper-modal { background: rgba(176, 99, 103, 0.35); }
+  .cropper-bg .cropper-view-box { outline: 2px solid var(--rose); }
+  .cropper-bg .cropper-dashed { border-color: rgba(255,255,255,0.4); }
+  .cropper-bg .cropper-line { background: var(--rose); }
+  .cropper-bg .cropper-point { background: var(--gold); width: 10px; height: 10px; opacity: 0.9; }
+
+  @media (min-width: 481px) {
+    body { padding: 20px 0; background: #ede6d8; }
+    .app { border-radius: 24px; min-height: calc(100vh - 40px); overflow: hidden; }
+    .topbar { border-radius: 24px 24px 0 0; }
+    .tabbar { position: sticky; }
+  }
+
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- OC宿舍 v2.4 — per-language source types (JA: 4 sources) build -->
+  <div class="topbar">
+    <div class="brand">
+      <div class="logo">O</div>
+      <div class="name"><span id="brandName">OC宿舍</span><small id="brandSub">角色存檔管家</small></div>
+    </div>
+    <div class="acts">
+      <button class="act-btn lang-btn" id="langBtn" title="切換語言 / 言語切替">
+        <span id="langLabel">中</span>
+      </button>
+      <button class="act-btn" id="settingsBtn" title="設定">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="view active" id="view-home">
+      <div class="hero-banner">
+        <div class="l" id="heroLabel">My Saves</div>
+        <div class="v" id="heroTitle">我的角色存檔<small id="heroSub">已備份 <span id="heroCount">0</span> 個 · 叫出過 <span id="heroScans">0</span> 次</small></div>
+        <div class="row" id="heroStats">
+          <!-- dynamically rendered source stats -->
+        </div>
+      </div>
+
+      <div class="quick-row">
+        <button class="quick q1" id="quickAdd">
+          <div class="ic">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </div>
+          <div class="t" id="quickAddTitle">新增存檔</div>
+          <div class="s" id="quickAddSub">手動填資料</div>
+        </button>
+        <button class="quick q2" id="quickArcade">
+          <div class="ic">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          </div>
+          <div class="t" id="quickArcadeTitle">機台模式</div>
+          <div class="s" id="quickArcadeSub">叫出原圖</div>
+        </button>
+      </div>
+
+      <div class="sec-head">
+        <h2 id="sectionTitle">我的存檔</h2>
+        <span class="more" id="addSaveBtn2">+ 新增</span>
+      </div>
+      <div class="save-list" id="saveList"></div>
+    </div>
+
+    <div class="view" id="view-detail">
+      <div id="detailContent"></div>
+    </div>
+
+    <div class="view" id="view-arcade-pick">
+      <div class="sec-head">
+        <h2 id="arcadePickTitle">選擇要叫出的存檔</h2>
+      </div>
+      <div class="save-list" id="arcadePickList"></div>
+    </div>
+
+    <div class="view" id="view-scan">
+      <div class="upload-row">
+        <div class="upload-btn primary" id="scanCameraBtn">
+          <div class="ic">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          </div>
+          <div class="t" id="scanCamTitle">拍照</div>
+          <div class="s" id="scanCamSub">直接用相機拍</div>
+        </div>
+        <div class="upload-btn" id="scanGalleryBtn">
+          <div class="ic">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+          </div>
+          <div class="t" id="scanGalTitle">從相簿</div>
+          <div class="s" id="scanGalSub">選已存在的照片</div>
+        </div>
+      </div>
+      <div class="scan-area" id="scanArea">
+        <div class="placeholder" id="scanPlaceholder">
+          <div class="ic">✦</div>
+          <p id="scanPlaceholderText">選上方任一方式上傳<br>QR Code 照片即可</p>
+        </div>
+        <video id="scanVideo" autoplay playsinline style="display:none;"></video>
+        <div class="scan-frame" id="scanFrame" style="display:none;">
+          <div class="corner tl"></div>
+          <div class="corner tr"></div>
+          <div class="corner bl"></div>
+          <div class="corner br"></div>
+        </div>
+        <div class="scan-hint" id="scanHint" style="display:none;">點擊畫面拍照</div>
+      </div>
+      <div class="scan-tip">
+        <svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.5.4 1 1 1 2v.3a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1V17c0-1 .5-1.6 1-2A7 7 0 0 0 12 2z"/></svg>
+        <div id="scanTipText">上傳後會保留<strong>原始圖片</strong>，叫出時 1:1 重現，機台一定能掃到。</div>
+      </div>
+    </div>
+
+    <div class="view" id="view-settings">
+      <div class="settings-section">
+        <h3 id="settingsDataLabel">資料管理</h3>
+        <div class="settings-list">
+          <div class="settings-item" id="exportBtn">
+            <div class="ic">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            </div>
+            <div class="info">
+              <div class="t" id="exportTitle">匯出資料</div>
+              <div class="s" id="exportSub">備份所有語言的存檔（圖片以 base64 內嵌）</div>
+            </div>
+            <div class="arrow">→</div>
+          </div>
+          <div class="settings-item" id="importBtn">
+            <div class="ic">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+            </div>
+            <div class="info">
+              <div class="t" id="importTitle">匯入資料</div>
+              <div class="s" id="importSub">從 JSON 檔還原</div>
+            </div>
+            <div class="arrow">→</div>
+          </div>
+          <input type="file" id="importFile" accept="application/json" style="display:none;">
+          <div class="settings-item" id="resetBtn" style="color: var(--danger);">
+            <div class="ic" style="background: #f9e1de; color: var(--danger);">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            </div>
+            <div class="info">
+              <div class="t" id="resetTitle">清除目前語言資料</div>
+              <div class="s" id="resetSub">只刪除當前語言的存檔</div>
+            </div>
+            <div class="arrow">→</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3 id="settingsAboutLabel">關於</h3>
+        <div class="settings-list">
+          <div class="settings-item" style="cursor: default;">
+            <div class="ic" style="background: var(--gold-soft); color: var(--gold-deep);">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            </div>
+            <div class="info">
+              <div class="t" id="aboutAppName">OC宿舍</div>
+              <div class="s" id="aboutVersion">v2.4 · 角色存檔管家</div>
+            </div>
+          </div>
+          <div class="settings-item" style="cursor: default;">
+            <div class="ic" style="background: var(--purple-soft); color: var(--purple);">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            </div>
+            <div class="info">
+              <div class="t" id="aboutStorageLabel">資料儲存</div>
+              <div class="s" id="aboutStorageSub">所有資料（包含圖片）只存在你的裝置</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabbar">
+    <div class="tab active" data-view="home">
+      <div class="ic">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="m12 3 2.5 6.5L21 10l-5 4.5L17.5 21 12 17.5 6.5 21 8 14.5 3 10l6.5-.5L12 3z"/></svg>
+      </div>
+      <span id="tabHomeLabel">存檔</span>
+    </div>
+    <div class="tab" data-view="scan">
+      <div class="ic">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      </div>
+      <span id="tabScanLabel">拍照</span>
+    </div>
+    <div class="tab" data-view="arcade-pick">
+      <div class="ic">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      </div>
+      <span id="tabArcadeLabel">機台</span>
+    </div>
+    <div class="tab" data-view="settings">
+      <div class="ic">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
+      </div>
+      <span id="tabSettingsLabel">設定</span>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="saveAvatarInput" accept="image/*" style="display:none;">
+<input type="file" id="saveAvatarCamInput" accept="image/*" capture="environment" style="display:none;">
+<input type="file" id="saveQRInput" accept="image/*" style="display:none;">
+<input type="file" id="saveQRCamInput" accept="image/*" capture="environment" style="display:none;">
+<input type="file" id="scanCamInput" accept="image/*" capture="environment" style="display:none;">
+<input type="file" id="scanGalInput" accept="image/*" style="display:none;">
+
+<div class="modal-bg" id="saveModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-head">
+      <h3 id="saveModalTitle">新增存檔</h3>
+      <button class="close" data-close="saveModal">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="avatar-upload">
+        <div class="av" id="saveAvatarUpload">
+          <div class="placeholder" id="saveAvatarPlaceholder">
+            <div class="ic">✦</div>
+            <div id="avatarLabel">點擊上傳<br>自訂頭像</div>
+          </div>
+          <img id="saveAvatarPreview" style="display:none;">
+        </div>
+        <div class="avatar-btns">
+          <button class="btn-mini" id="saveAvatarCamBtn">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            <span id="qrCamBtnText">拍照</span>
+          </button>
+          <button class="btn-mini" id="saveAvatarGalBtn">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+            <span id="qrGalBtnText">從相簿</span>
+          </button>
+        </div>
+        <div class="avatar-hint" id="avatarHint">選填 · 這張圖代表你這個存檔的「角色」</div>
+      </div>
+      <div class="field">
+        <label id="sourceLabel">來源</label>
+        <div class="source-selector" id="saveSource">
+          <!-- dynamically rendered source options -->
+        </div>
+      </div>
+      <div class="field">
+        <label id="nameLabel">暱稱</label>
+        <input type="text" id="saveName" placeholder="例如：我的陽葵款手環">
+      </div>
+      <div class="field">
+        <label id="qrLabel">QR Code 圖片 *</label>
+        <div class="qr-upload-wrap">
+          <div class="img-upload qr" id="saveQRUpload">
+            <div class="placeholder" id="saveQRPlaceholder">
+              <div class="ic">⌚</div>
+              <div class="ttl" id="qrPlaceholderTitle">拍下或選取 QR Code</div>
+              <div class="sub" id="qrPlaceholderSub">原圖保存，機台前 1:1 顯示<br>（手環掉了也能救回）</div>
+            </div>
+            <img id="saveQRPreview" style="display:none;">
+          </div>
+          <div class="qr-upload-btns">
+            <button class="btn cam" id="saveQRCamBtn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              <span id="qrCamBtnText2">拍照</span>
+            </button>
+            <button class="btn" id="saveQRGalBtn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+              <span id="qrGalBtnText2">從相簿</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" data-close="saveModal" id="cancelBtn">取消</button>
+      <button class="btn btn-primary" id="saveSaveBtn">儲存</button>
+    </div>
+  </div>
+</div>
+
+<div class="cropper-bg" id="cropperModal">
+  <div class="cropper-head">
+    <button id="cropperClose" title="關閉">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <h3 id="cropperTitle">裁切 QR Code</h3>
+    <button id="cropperRotate" title="旋轉 90°">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+    </button>
+  </div>
+  <div class="cropper-body">
+    <img id="cropperImage" src="" alt="">
+    <div class="cropper-tip" id="cropperTip">拖曳移動 · 捏合縮放 · 旋轉按鈕</div>
+  </div>
+  <div class="cropper-aspect">
+    <button class="active" data-ratio="1" id="crop1">1:1 正方</button>
+    <button data-ratio="1.333" id="crop43">4:3</button>
+    <button data-ratio="0.75" id="crop34">3:4</button>
+    <button data-ratio="NaN" id="cropFree">自由</button>
+  </div>
+  <div class="cropper-foot">
+    <button class="btn btn-ghost" id="cropperCancel" data-cropper-cancel>重新選照片</button>
+    <button class="btn btn-primary" id="cropperConfirm" data-cropper-confirm>確認裁切</button>
+  </div>
+</div>
+
+<div class="modal-bg center" id="confirmModal" style="align-items: center;">
+  <div class="confirm">
+    <h4 id="confirmTitle">確認</h4>
+    <p id="confirmText">確定要執行嗎？</p>
+    <div class="row">
+      <button class="btn btn-ghost" id="confirmCancel">取消</button>
+      <button class="btn btn-danger" id="confirmOk">確定</button>
+    </div>
+  </div>
+</div>
+
+<div class="arcade-bg" id="arcadeScreen">
+  <div class="arcade-head">
+    <button class="close" id="arcadeClose">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div class="ttl">Arcade Mode</div>
+    <div class="acts">
+      <button id="arcadeBright" title="亮度提示">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="arcade-content">
+    <div class="arcade-avatar" id="arcadeAvatar"><span class="emoji">⌚</span></div>
+    <div class="source-chip-mini" id="arcadeSource">手環</div>
+    <div class="nm" id="arcadeName">—</div>
+    <div class="id" id="arcadeId">—</div>
+    <div class="qr-big" id="arcadeQR"></div>
+    <div class="meta" id="arcadeMeta">READY TO SCAN</div>
+    <div class="arcade-tips" id="arcadeTip">對準機台感應面板即可掃描</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   OC宿舍 v2.4 — Per-language source types (JP: 4 sources, ZH: 2 sources)
+   ============================================================ */
+
+const STORAGE_KEY = 'aipri-buddy-data-v4';
+const LANG_KEY = 'aipri-buddy-lang-v1';
+
+const I18N = {
+  zh: {
+    appName: 'OC宿舍',
+    appSubtitle: '角色存檔管家',
+    heroLabel: 'My Saves',
+    heroTitle: '我的角色存檔',
+    heroSub: (n1, n2) => `已備份 ${n1} 個 · 叫出過 ${n2} 次`,
+    heroBracelets: '手環',
+    heroOfficial: '官網',
+    heroCardBox: '粉盒',
+    heroFriendCard: '朋友卡',
+    heroLines: 'LINE ID',
+    heroOther: '其他',
+    quickAddTitle: '新增存檔',
+    quickAddSub: '手動填資料',
+    quickArcadeTitle: '機台模式',
+    quickArcadeSub: '叫出原圖',
+    sectionTitle: '我的存檔',
+    addNew: '+ 新增',
+    emptyTitle: '還沒有存檔',
+    emptyText: '為你的手環、LINE ID 或朋友卡建立存檔，<br>還能上傳一張自訂角色圖片。',
+    emptyBtn: '+ 新增第一個存檔',
+    typeBracelet: '手環',
+    typeOfficial: '官網',
+    typeCardBox: '粉盒',
+    typeFriendCard: '朋友卡',
+    typeLine: 'LINE',
+    typeOther: '其他',
+    saved: '已備份',
+    notUploaded: '未上傳 QR Code',
+    used: (n) => `已用 ${n} 次`,
+    sourceLabel: '來源',
+    sourceBraceletTitle: '實體手環',
+    sourceBraceletSub: '手環上的 QR Code',
+    sourceOfficialTitle: '官網序號',
+    sourceOfficialSub: '從偶像公主官網取得的代碼',
+    sourceCardBoxTitle: '粉盒',
+    sourceCardBoxSub: '偶像公主粉盒內的卡片',
+    sourceFriendCardTitle: '電子朋友卡',
+    sourceFriendCardSub: '在遊戲中收到的朋友卡',
+    sourceLineTitle: 'LINE 偶像公主 ID',
+    sourceLineSub: '從 SEGA Taiwan LINE 領的',
+    sourceOther: '其他',
+    sourceOtherSub: '其他來源的代碼',
+    nameLabel: '暱稱',
+    namePlaceholderBracelet: '例如：我的陽葵款手環',
+    namePlaceholderOfficial: '例如：官網序號 A1234',
+    namePlaceholderCardBox: '例如：粉盒的紗良卡',
+    namePlaceholderFriendCard: '例如：朋友送的麻衣卡',
+    namePlaceholderLine: '例如：我的 LINE 偶像公主 ID',
+    namePlaceholderOther: '例如：其他來源',
+    nameDefaultBracelet: '我的手環',
+    nameDefaultOfficial: '我的官網序號',
+    nameDefaultCardBox: '我的粉盒卡',
+    nameDefaultFriendCard: '我的朋友卡',
+    nameDefaultLine: '我的 LINE ID',
+    nameDefaultOther: '我的存檔',
+    qrLabel: 'QR Code 圖片 *',
+    qrPlaceholderTitle: '拍下或選取 QR Code',
+    qrPlaceholderSub: '原圖保存，機台前 1:1 顯示<br>（手環掉了也能救回）',
+    qrCamBtn: '拍照',
+    qrGalBtn: '從相簿',
+    avatarLabel: '點擊上傳<br>自訂頭像',
+    avatarHint: '選填 · 這張圖代表你這個存檔的「角色」',
+    modalTitleAdd: '新增存檔',
+    modalTitleEdit: '編輯存檔',
+    cancel: '取消',
+    save: '儲存',
+    typeLabelBracelet: '實體手環',
+    typeLabelOfficial: '官網序號',
+    typeLabelCardBox: '粉盒',
+    typeLabelFriendCard: '電子朋友卡',
+    typeLabelLine: 'LINE 偶像公主 ID',
+    typeLabelOther: '其他',
+    notUploadedQR: '還沒上傳 QR Code',
+    notUploadedHint: '請編輯這個存檔補上',
+    usedTimes: (n) => `已叫出 <strong>${n}</strong> 次`,
+    arcadeBtn: '機台模式',
+    editBtn: '編輯',
+    deleteBtn: '刪除',
+    createdAt: (d) => `${d} 建立`,
+    arcadeTitle: 'Arcade Mode',
+    arcadeReady: 'READY TO SCAN',
+    arcadeTip: '對準機台感應面板即可掃描',
+    arcadeBrightness: '提示：把螢幕亮度調到最高 ✦',
+    arcadePickTitle: '選擇要叫出的存檔',
+    scanCam: '拍照',
+    scanCamSub: '直接用相機拍',
+    scanGal: '從相簿',
+    scanGalSub: '選已存在的照片',
+    scanPlaceholder: '選上方任一方式上傳<br>QR Code 照片即可',
+    scanTip: '上傳後會保留<strong>原始圖片</strong>，叫出時 1:1 重現，機台一定能掃到。',
+    scanHint: '點擊畫面拍照',
+    settingsData: '資料管理',
+    settingsAbout: '關於',
+    exportTitle: '匯出全部資料',
+    exportSub: '備份所有語言的存檔（圖片以 base64 內嵌）',
+    importTitle: '匯入資料',
+    importSub: '從 JSON 檔還原',
+    resetTitle: '清除目前語言資料',
+    resetSub: '只刪除當前語言的存檔',
+    aboutApp: 'OC宿舍',
+    aboutVersion: 'v2.4 · 角色二維碼存檔管家',
+    aboutStorage: '資料儲存',
+    aboutStorageSub: '所有資料（包含圖片）只存在你的裝置',
+    cropTitle: '裁切 QR Code',
+    cropRotate: '旋轉 90°',
+    cropTip: '拖曳移動 · 捏合縮放 · 旋轉按鈕',
+    crop1: '1:1 正方',
+    crop43: '4:3',
+    crop34: '3:4',
+    cropFree: '自由',
+    cropReselect: '重新選照片',
+    cropConfirm: '確認裁切',
+    tabHome: '存檔',
+    tabScan: '拍照',
+    tabArcade: '機台',
+    tabSettings: '設定',
+    toastCropDone: '裁切完成 ✦',
+    toastCancel: '已取消，請重新選擇照片',
+    toastSaved: '存檔已備份 ✦',
+    toastUpdated: '已更新',
+    toastDeleted: '已刪除',
+    toastNoQR: '請上傳 QR Code 圖片',
+    toastNoName: '請輸入暱稱',
+    toastCropFail: '裁切失敗，請重試',
+    toastCropError: '裁切時發生錯誤',
+    toastTooBig: '圖片太大（20MB 以下）',
+    toastNotImage: '請選擇圖片檔',
+    toastReadFail: '讀取檔案失敗',
+    toastCameraFail: '無法存取相機，請用「從相簿」',
+    toastExportDone: '已匯出備份檔',
+    toastImportDone: '匯入成功！',
+    toastImportFail: '檔案格式不正確',
+    toastReset: '已清除目前語言資料',
+    toastStorageFull: '儲存空間不足，請減少圖片數量',
+    toastProcessing: '處理圖片中…',
+    toastCropping: '準備裁切…',
+    toastCantCrop: '此格式無法裁切，使用原圖',
+    confirmDelete: (n) => `刪除「${n}」？`,
+    confirmDeleteText: '刪除後無法復原',
+    confirmResetTitle: '清除目前語言所有資料？',
+    confirmResetText: '只會刪除當前語言的存檔，其他語言不受影響。',
+    confirmOk: '確定',
+    confirmCancel: '取消',
+    langLabel: '中',
+    langOther: '日',
+  },
+  ja: {
+    appName: 'セーブコード',
+    appSubtitle: 'アイプリ · セーブコード管理',
+    heroLabel: 'My Saves',
+    heroTitle: 'セーブコード',
+    heroSub: (n1, n2) => `${n1}個保存 · ${n2}回使用`,
+    heroBracelets: 'アイプリブレス',
+    heroOfficial: '公式',
+    heroCardBox: 'ミラーパクト',
+    heroFriendCard: 'フレンドコード',
+    heroOther: '他',
+    quickAddTitle: '追加',
+    quickAddSub: '手動で作成',
+    quickArcadeTitle: 'アーケード',
+    quickArcadeSub: '原寸表示',
+    sectionTitle: 'セーブ一覧',
+    addNew: '+ 追加',
+    emptyTitle: 'セーブデータなし',
+    emptyText: 'ブレスレット · 公式 · ピンキー · フレンズカードを<br>まとめてバックアップ。',
+    emptyBtn: '+ 最初のセーブを追加',
+    typeBracelet: 'アイプリ',
+    typeOfficial: '公式',
+    typeCardBox: 'ミラー',
+    typeFriendCard: 'フレンド',
+    typeLine: 'LINE',
+    typeOther: '他',
+    saved: '保存済',
+    notUploaded: 'QR未登録',
+    used: (n) => `${n}回使用`,
+    sourceLabel: '種別',
+    sourceBraceletTitle: 'アイプリブレス',
+    sourceBraceletSub: '手元のアイプリブレス QR',
+    sourceOfficialTitle: '公式セーブコード',
+    sourceOfficialSub: '公式サイトで取得したコード',
+    sourceCardBoxTitle: 'ミラーパクト',
+    sourceCardBoxSub: 'ミラーパクト内の QR',
+    sourceFriendCardTitle: 'フレンドコード',
+    sourceFriendCardSub: 'ゲーム内のフレンドコード',
+    sourceLineTitle: 'LINE アイプリ ID',
+    sourceLineSub: 'SEGA Taiwan LINEで取得',
+    sourceOther: 'その他',
+    sourceOtherSub: 'その他のコード',
+    nameLabel: 'ニックネーム',
+    namePlaceholderBracelet: '例：私のアイプリブレス',
+    namePlaceholderOfficial: '例：私の公式セーブコード',
+    namePlaceholderCardBox: '例：ミラーパクトのひまり',
+    namePlaceholderFriendCard: '例：フレンドコード (ひまり)',
+    namePlaceholderLine: '例：私のLINE ID',
+    namePlaceholderOther: '例：その他のセーブ',
+    nameDefaultBracelet: '私のブレスレット',
+    nameDefaultOfficial: '私の公式コード',
+    nameDefaultCardBox: '私のピンキーズ',
+    nameDefaultFriendCard: '私のフレンドカード',
+    nameDefaultLine: '私のLINE ID',
+    nameDefaultOther: '私のセーブ',
+    qrLabel: 'QRコード画像 *',
+    qrPlaceholderTitle: 'QRを撮影または選択',
+    qrPlaceholderSub: '原寸で保存 · ゲーム機で1:1表示',
+    qrCamBtn: '撮影',
+    qrGalBtn: 'アルバム',
+    avatarLabel: 'クリックで<br>画像登録',
+    avatarHint: '任意 · このセーブの「キャラ」を表す画像',
+    modalTitleAdd: 'セーブを追加',
+    modalTitleEdit: 'セーブを編集',
+    cancel: 'キャンセル',
+    save: '保存',
+    typeLabelBracelet: 'アイプリブレス',
+    typeLabelOfficial: '公式セーブコード',
+    typeLabelCardBox: 'ミラーパクト',
+    typeLabelFriendCard: 'フレンドコード',
+    typeLabelLine: 'LINE アイプリ ID',
+    typeLabelOther: 'その他',
+    notUploadedQR: 'QRコード未登録',
+    notUploadedHint: '編集から追加してください',
+    usedTimes: (n) => `<strong>${n}</strong>回呼び出し`,
+    arcadeBtn: 'アーケード',
+    editBtn: '編集',
+    deleteBtn: '削除',
+    createdAt: (d) => `${d} 作成`,
+    arcadeTitle: 'Arcade Mode',
+    arcadeReady: 'READY TO SCAN',
+    arcadeTip: 'ゲーム機の読み取り部にかざしてください',
+    arcadeBrightness: '画面の輝度を最大に ✦',
+    arcadePickTitle: '呼び出すセーブを選択',
+    scanCam: '撮影',
+    scanCamSub: 'カメラで撮影',
+    scanGal: 'アルバム',
+    scanGalSub: '既存画像から選択',
+    scanPlaceholder: '上のボタンから<br>QRをアップロード',
+    scanTip: '<strong>原寸</strong>で保存 · ゲーム機で確実にスキャン',
+    scanHint: '画面タップで撮影',
+    settingsData: 'データ管理',
+    settingsAbout: 'このアプリ',
+    exportTitle: '全データをエクスポート',
+    exportSub: '全言語のセーブをJSON出力（画像含む）',
+    importTitle: 'インポート',
+    importSub: 'JSONから復元',
+    resetTitle: 'この言語のデータを削除',
+    resetSub: '現在の言語のセーブのみ削除',
+    aboutApp: 'OC寮',
+    aboutVersion: 'v2.4 · セーブコード · セーブコード管理',
+    aboutStorage: 'データ保存',
+    aboutStorageSub: '全データ（画像含む）は端末内のみ',
+    cropTitle: 'QRをトリミング',
+    cropRotate: '90°回転',
+    cropTip: 'ドラッグ · ピンチ · 回転',
+    crop1: '1:1',
+    crop43: '4:3',
+    crop34: '3:4',
+    cropFree: '自由',
+    cropReselect: '選び直す',
+    cropConfirm: '決定',
+    tabHome: 'セーブ',
+    tabScan: '撮影',
+    tabArcade: 'AC',
+    tabSettings: '設定',
+    toastCropDone: 'トリミング完了 ✦',
+    toastCancel: 'キャンセル · 選び直してください',
+    toastSaved: '保存しました ✦',
+    toastUpdated: '更新しました',
+    toastDeleted: '削除しました',
+    toastNoQR: 'QR画像をアップロードしてください',
+    toastNoName: 'ニックネームを入力してください',
+    toastCropFail: 'トリミング失敗',
+    toastCropError: 'エラーが発生しました',
+    toastTooBig: '画像が大きすぎます（20MB以下）',
+    toastNotImage: '画像ファイルを選択してください',
+    toastReadFail: '読み込み失敗',
+    toastCameraFail: 'カメラ不可 · アルバムから選択',
+    toastExportDone: 'バックアップ出力完了',
+    toastImportDone: 'インポート成功！',
+    toastImportFail: 'ファイル形式エラー',
+    toastReset: 'この言語のデータを削除しました',
+    toastStorageFull: '容量不足 · 画像を削減してください',
+    toastProcessing: '処理中…',
+    toastCropping: 'トリミング準備…',
+    toastCantCrop: 'この形式はトリミング不可 · 原寸使用',
+    confirmDelete: (n) => `「${n}」を削除？`,
+    confirmDeleteText: '復元できません',
+    confirmResetTitle: 'この言語の全データを削除？',
+    confirmResetText: '現在の言語のセーブのみ削除 · 他言語は影響なし',
+    confirmOk: 'OK',
+    confirmCancel: 'キャンセル',
+    langLabel: '日',
+    langOther: '中',
+  }
+};
+
+// Source types per language. Each entry defines the metadata for one save
+// source. The order in each list is the display order in the selector.
+const SOURCES = {
+  zh: [
+    { id: 'bracelet',    icon: '⌚', title: 'sourceBraceletTitle',  sub: 'sourceBraceletSub',
+      placeholder: 'namePlaceholderBracelet',  defaultName: 'nameDefaultBracelet',
+      stat: 'heroBracelets',  short: 'typeBracelet',  full: 'typeLabelBracelet' },
+    { id: 'line_id',     icon: '💬', title: 'sourceLineTitle',     sub: 'sourceLineSub',
+      placeholder: 'namePlaceholderLine',      defaultName: 'nameDefaultLine',
+      stat: 'heroLines',       short: 'typeLine',      full: 'typeLabelLine' },
+  ],
+  ja: [
+    { id: 'bracelet',    icon: '⌚', title: 'sourceBraceletTitle',  sub: 'sourceBraceletSub',
+      placeholder: 'namePlaceholderBracelet',  defaultName: 'nameDefaultBracelet',
+      stat: 'heroBracelets',  short: 'typeBracelet',  full: 'typeLabelBracelet' },
+    { id: 'official',    icon: '🌐', title: 'sourceOfficialTitle', sub: 'sourceOfficialSub',
+      placeholder: 'namePlaceholderOfficial',  defaultName: 'nameDefaultOfficial',
+      stat: 'heroOfficial',    short: 'typeOfficial',  full: 'typeLabelOfficial' },
+    { id: 'card_box',    icon: '🎀', title: 'sourceCardBoxTitle',  sub: 'sourceCardBoxSub',
+      placeholder: 'namePlaceholderCardBox',   defaultName: 'nameDefaultCardBox',
+      stat: 'heroCardBox',     short: 'typeCardBox',   full: 'typeLabelCardBox' },
+    { id: 'friend_card', icon: '💝', title: 'sourceFriendCardTitle', sub: 'sourceFriendCardSub',
+      placeholder: 'namePlaceholderFriendCard', defaultName: 'nameDefaultFriendCard',
+      stat: 'heroFriendCard',  short: 'typeFriendCard', full: 'typeLabelFriendCard' },
+    // Legacy: line_id kept for backward compat with old saves
+    { id: 'line_id',     icon: '💬', title: 'sourceLineTitle',     sub: 'sourceLineSub',
+      placeholder: 'namePlaceholderLine',      defaultName: 'nameDefaultLine',
+      stat: 'heroOther',       short: 'typeLine',      full: 'typeLabelLine' },
+  ]
+};
+
+// Fallback source for unknown / legacy type values
+const FALLBACK_SOURCE = {
+  id: 'unknown', icon: '❓',
+  title: 'sourceOther', sub: 'sourceOtherSub',
+  placeholder: 'namePlaceholderOther', defaultName: 'nameDefaultOther',
+  stat: 'heroOther', short: 'typeOther', full: 'typeLabelOther'
+};
+
+const App = {
+  data: { zh: { saveData: [] }, ja: { saveData: [] } },
+  currentData: { saveData: [] },
+  editing: null,
+  qrData: null,
+  avatarData: null,
+  saveType: 'bracelet',
+  currentView: 'home',
+  currentDetailId: null,
+  lang: 'zh',
+  _cropper: null,
+  _cropperCallback: null,
+  scanStream: null,
+
+  uid() {
+    return 'id-' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+  },
+
+  /* ---------- i18n ---------- */
+  t(key, ...args) {
+    const langData = I18N[this.lang] || I18N.zh;
+    const val = langData[key] ?? I18N.zh[key] ?? key;
+    return typeof val === 'function' ? val(...args) : val;
+  },
+
+  /* ---------- source helpers (per-language) ---------- */
+  getSources() {
+    return SOURCES[this.lang] || SOURCES.zh;
+  },
+  getSourceById(id) {
+    return this.getSources().find(s => s.id === id) || FALLBACK_SOURCE;
+  },
+  getSourceShort(id) { return this.t(this.getSourceById(id).short); },
+  getSourceFull(id)  { return this.t(this.getSourceById(id).full); },
+  getSourceIcon(id)  { return this.getSourceById(id).icon; },
+  getSourceStat(id)  { return this.t(this.getSourceById(id).stat); },
+  getSourceDefaultName(id) { return this.t(this.getSourceById(id).defaultName); },
+  getSourcePlaceholder(id) { return this.t(this.getSourceById(id).placeholder); },
+
+  setLang(lang) {
+    if (!I18N[lang]) return;
+    this.lang = lang;
+    try { localStorage.setItem(LANG_KEY, lang); } catch (e) {}
+    this.refreshCurrentData();
+    this.applyLang();
+    this.render();
+  },
+
+  refreshCurrentData() {
+    if (!this.data[this.lang] || typeof this.data[this.lang] !== 'object') {
+      this.data[this.lang] = { saveData: [] };
+    }
+    if (!Array.isArray(this.data[this.lang].saveData)) {
+      this.data[this.lang].saveData = [];
+    }
+    this.currentData = this.data[this.lang];
+  },
+
+  applyLang() {
+    // Map element ids → i18n keys. Many ids have suffixes like "Label" that
+    // don't exist as keys; here we map the id to the actual translation key.
+    const idToKey = {
+      brandName: 'appName',
+      brandSub: 'appSubtitle',
+      langLabel: 'langLabel',
+      heroLabel: 'heroLabel',
+      heroTitle: 'heroTitle',
+      heroSub: 'heroSub',
+      heroBraceletsLabel: 'heroBracelets',
+      heroLinesLabel: 'heroLines',
+      quickAddTitle: 'quickAddTitle',
+      quickAddSub: 'quickAddSub',
+      quickArcadeTitle: 'quickArcadeTitle',
+      quickArcadeSub: 'quickArcadeSub',
+      sectionTitle: 'sectionTitle',
+      addSaveBtn2: 'addNew',
+      arcadePickTitle: 'arcadePickTitle',
+      scanCamTitle: 'scanCam',
+      scanCamSub: 'scanCamSub',
+      scanGalTitle: 'scanGal',
+      scanGalSub: 'scanGalSub',
+      scanPlaceholderText: 'scanPlaceholder',
+      scanHint: 'scanHint',
+      scanTipText: 'scanTip',
+      settingsDataLabel: 'settingsData',
+      exportTitle: 'exportTitle',
+      exportSub: 'exportSub',
+      importTitle: 'importTitle',
+      importSub: 'importSub',
+      resetTitle: 'resetTitle',
+      resetSub: 'resetSub',
+      settingsAboutLabel: 'settingsAbout',
+      aboutAppName: 'aboutApp',
+      aboutVersion: 'aboutVersion',
+      aboutStorageLabel: 'aboutStorage',
+      aboutStorageSub: 'aboutStorageSub',
+      tabHomeLabel: 'tabHome',
+      tabScanLabel: 'tabScan',
+      tabArcadeLabel: 'tabArcade',
+      tabSettingsLabel: 'tabSettings',
+      sourceLabel: 'sourceLabel',
+      nameLabel: 'nameLabel',
+      qrLabel: 'qrLabel',
+      avatarLabel: 'avatarLabel',
+      avatarHint: 'avatarHint',
+      sourceBraceletTitle: 'sourceBraceletTitle',
+      sourceBraceletSub: 'sourceBraceletSub',
+      sourceLineTitle: 'sourceLineTitle',
+      sourceLineSub: 'sourceLineSub',
+      qrPlaceholderTitle: 'qrPlaceholderTitle',
+      qrPlaceholderSub: 'qrPlaceholderSub',
+      qrCamBtnText: 'qrCamBtn',
+      qrGalBtnText: 'qrGalBtn',
+      qrCamBtnText2: 'qrCamBtn',
+      qrGalBtnText2: 'qrGalBtn',
+      cancelBtn: 'cancel',
+      cropperTitle: 'cropTitle',
+      cropperTip: 'cropTip',
+      crop1: 'crop1',
+      crop43: 'crop43',
+      crop34: 'crop34',
+      cropFree: 'cropFree',
+      cropperCancel: 'cropReselect',
+      cropperConfirm: 'cropConfirm',
+      arcadeMeta: 'arcadeReady',
+      arcadeTip: 'arcadeTip',
+    };
+    Object.keys(idToKey).forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const translated = this.t(idToKey[id]);
+      if (translated && typeof translated === 'string') el.textContent = translated;
+    });
+
+    // Re-render views
+    this.render();
+    if (this.currentView === 'detail' && this.currentDetailId) {
+      this.openDetail(this.currentDetailId);
+    }
+  },
+
+  load() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+          // Migration: old format had saveData at top level
+          if (Array.isArray(parsed.saveData) && !parsed.zh && !parsed.ja) {
+            this.data = { zh: { saveData: parsed.saveData }, ja: { saveData: [] } };
+          } else {
+            this.data = {
+              zh: (parsed.zh && typeof parsed.zh === 'object') ? parsed.zh : { saveData: [] },
+              ja: (parsed.ja && typeof parsed.ja === 'object') ? parsed.ja : { saveData: [] }
+            };
+          }
+        } else {
+          this.data = { zh: { saveData: [] }, ja: { saveData: [] } };
+        }
+      } else {
+        this.data = { zh: { saveData: [] }, ja: { saveData: [] } };
+      }
+    } catch (e) {
+      console.error('[OC宿舍] load error:', e);
+      this.data = { zh: { saveData: [] }, ja: { saveData: [] } };
+    }
+    this.refreshCurrentData();
+  },
+
+  save() {
+    try {
+      this.data[this.lang] = this.currentData;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
+    } catch (e) {
+      this.toast(this.t('toastStorageFull'), 'error');
+    }
+  },
+
+  seed() { return { saveData: [] }; },
+
+  render() {
+    this.renderHome();
+    this.renderArcadePickList();
+    this.renderHeroStats();
+    this.renderSourceSelector();
+  },
+
+  renderHeroStats() {
+    const container = document.getElementById('heroStats');
+    if (!container) return;
+    const saves = this.currentData.saveData;
+    const sources = this.getSources();
+    container.innerHTML = sources.map(s => {
+      const count = saves.filter(x => (x.type || 'bracelet') === s.id).length;
+      return `<div class="item">
+        <div class="v">${count}</div>
+        <div class="l">${this.t(s.stat)}</div>
+      </div>`;
+    }).join('');
+  },
+
+  renderSourceSelector() {
+    const container = document.getElementById('saveSource');
+    if (!container) return;
+    const sources = this.getSources();
+    // Make sure current saveType is valid for this language
+    if (!sources.find(s => s.id === this.saveType)) {
+      this.saveType = sources[0].id;
+    }
+    container.innerHTML = sources.map(s => `
+      <div class="src-opt ${s.id === this.saveType ? 'active' : ''}" data-type="${s.id}">
+        <div class="ic">${s.icon}</div>
+        <div class="t">${this.t(s.title)}</div>
+        <div class="s">${this.t(s.sub)}</div>
+      </div>
+    `).join('');
+    // Re-bind click handlers
+    container.querySelectorAll('.src-opt').forEach(el => {
+      el.addEventListener('click', () => {
+        container.querySelectorAll('.src-opt').forEach(e => e.classList.remove('active'));
+        el.classList.add('active');
+        this.saveType = el.dataset.type;
+        const nameInput = document.getElementById('saveName');
+        if (nameInput) nameInput.placeholder = this.getSourcePlaceholder(this.saveType);
+      });
+    });
+  },
+
+  renderHome() {
+    const saves = this.currentData.saveData;
+    const totalScans = saves.reduce((s, x) => s + (x.scanCount || 0), 0);
+
+    document.getElementById('heroCount').textContent = saves.length;
+    document.getElementById('heroScans').textContent = totalScans;
+
+    const saveList = document.getElementById('saveList');
+    if (saves.length === 0) {
+      saveList.innerHTML = `<div class="empty">
+        <div class="ic">⌚</div>
+        <h3>${this.t('emptyTitle')}</h3>
+        <p>${this.t('emptyText')}</p>
+        <div class="btn" id="emptyAddBtn">${this.t('emptyBtn')}</div>
+      </div>`;
+      const btn = document.getElementById('emptyAddBtn');
+      if (btn) btn.addEventListener('click', () => this.openSaveModal());
+    } else {
+      saveList.innerHTML = saves.map(s => this.saveItemHTML(s)).join('');
+      saveList.querySelectorAll('.save-item').forEach(el => {
+        el.addEventListener('click', () => this.openDetail(el.dataset.id));
+      });
+    }
+  },
+
+  saveItemHTML(s) {
+    const src = this.getSourceById(s.type || 'bracelet');
+    const typeLabel = this.t(src.short);
+    const typeIcon = src.icon;
+    const isLine = src.id === 'line_id';
+    let circleClass, circleContent;
+    if (s.avatar) {
+      circleClass = 'has-avatar';
+      circleContent = `<img src="${s.avatar}" alt=""><div class="type-mini ${isLine ? 'line' : 'bracelet'}">${typeIcon}</div>`;
+    } else {
+      circleClass = isLine ? 'line' : `bracelet ${s.qrImage ? 'has-image' : ''}`;
+      circleContent = isLine
+        ? typeIcon
+        : (s.qrImage ? `<img src="${s.qrImage}" alt="">` : `<div class="qr-overlay">${typeIcon}</div>`);
+    }
+    return `
+      <div class="save-item" data-id="${s.id}">
+        <div class="ic-circle ${circleClass}">${circleContent}</div>
+        <div class="info">
+          <div class="nm">${this.escape(s.name)}</div>
+          <div class="sub">
+            <span class="type-badge ${isLine ? 'line' : 'bracelet'}">${typeLabel}</span>
+            ${s.qrImage ? this.t('saved') : this.t('notUploaded')} · ${this.t('used', s.scanCount || 0)}
+          </div>
+        </div>
+        <div class="arrow">→</div>
+      </div>
+    `;
+  },
+
+  renderArcadePickList() {
+    const el = document.getElementById('arcadePickList');
+    const saves = this.currentData.saveData;
+    if (saves.length === 0) {
+      el.innerHTML = `<div class="empty">
+        <div class="ic">⌚</div>
+        <h3>${this.t('emptyTitle')}</h3>
+        <p>${this.t('emptyText')}</p>
+      </div>`;
+      return;
+    }
+    el.innerHTML = saves.map(s => this.saveItemHTML(s)).join('');
+    el.querySelectorAll('.save-item').forEach(item => {
+      item.addEventListener('click', () => this.openArcade(item.dataset.id));
+    });
+  },
+
+  /* ---------- Detail View ---------- */
+  openDetail(id) {
+    const data = this.currentData.saveData.find(s => s.id === id);
+    if (!data) return;
+    this.currentDetailId = id;
+
+    const src = this.getSourceById(data.type || 'bracelet');
+    const isLine = src.id === 'line_id';
+    const typeLabel = this.t(src.full);
+    const typeIcon = src.icon;
+    const sourceClass = isLine ? 'line' : 'bracelet';
+    const gradMap = { bracelet: 'c-grad-rose', line_id: 'c-grad-line' };
+    const heroGrad = gradMap[src.id] || 'c-grad-rose';
+
+    const heroContent = data.avatar
+      ? `<img src="${data.avatar}" alt="" class="hero-img">`
+      : `<div class="hero-emoji">${typeIcon}</div>`;
+
+    const qrDisplay = data.qrImage
+      ? `<img src="${data.qrImage}" alt="QR Code">`
+      : `<div class="empty-state">
+          <div class="ic">${typeIcon}</div>
+          <div class="t">${this.t('notUploadedQR')}</div>
+          <div class="s">${this.t('notUploadedHint')}</div>
+        </div>`;
+
+    const content = `
+      <div class="detail-hero ${heroGrad} ${data.avatar ? 'has-image' : ''}">
+        <button class="back-btn" id="detailBack">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        ${heroContent}
+        <div class="source-chip-overlay ${sourceClass}">${typeIcon} ${typeLabel}</div>
+      </div>
+      <div class="detail-info">
+        <div class="name">${this.escape(data.name)}</div>
+        <div class="meta">${this.t('createdAt', this.formatDate(data.createdAt))}</div>
+      </div>
+      <div class="qr-card">
+        <div class="qr-display">${qrDisplay}</div>
+        <div class="qr-meta">${this.t('usedTimes', data.scanCount || 0)}</div>
+      </div>
+      <div class="qr-actions">
+        <button class="btn btn-primary" id="arcadeOpen">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/></svg>
+          ${this.t('arcadeBtn')}
+        </button>
+        <button class="btn btn-ghost" id="editItem">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          ${this.t('editBtn')}
+        </button>
+      </div>
+      <div class="qr-actions" style="margin-top: 8px;">
+        <button class="btn btn-ghost" id="deleteItem" style="color: var(--danger);">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          ${this.t('deleteBtn')}
+        </button>
+      </div>
+    `;
+
+    document.getElementById('detailContent').innerHTML = content;
+    this.setView('detail');
+
+    document.getElementById('detailBack').addEventListener('click', () => this.goBack());
+    document.getElementById('arcadeOpen').addEventListener('click', () => this.openArcade(id));
+    document.getElementById('editItem').addEventListener('click', () => this.openSaveModal(id));
+    document.getElementById('deleteItem').addEventListener('click', () => {
+      this.confirm(this.t('confirmDelete', data.name), this.t('confirmDeleteText'), () => {
+        this.currentData.saveData = this.currentData.saveData.filter(s => s.id !== id);
+        this.save();
+        this.render();
+        this.goBack();
+        this.toast(this.t('toastDeleted'));
+      });
+    });
+  },
+
+  goBack() { this.renderHome(); this.setView('home'); },
+
+  /* ---------- Arcade ---------- */
+  openArcade(id) {
+    const data = this.currentData.saveData.find(s => s.id === id);
+    if (!data) return;
+    const src = this.getSourceById(data.type || 'bracelet');
+    const isLine = src.id === 'line_id';
+    document.getElementById('arcadeName').textContent = data.name;
+    document.getElementById('arcadeId').textContent = `AIPRI · ${id.slice(-8).toUpperCase()}`;
+    const sourceEl = document.getElementById('arcadeSource');
+    sourceEl.textContent = src.icon + ' ' + this.t(src.full);
+    sourceEl.className = 'source-chip-mini ' + (isLine ? 'line' : 'bracelet');
+
+    const avatarEl = document.getElementById('arcadeAvatar');
+    if (data.avatar) {
+      avatarEl.innerHTML = `<img src="${data.avatar}" alt="">`;
+    } else {
+      avatarEl.innerHTML = `<span class="emoji">${src.icon}</span>`;
+    }
+
+    const qrEl = document.getElementById('arcadeQR');
+    if (data.qrImage) {
+      qrEl.innerHTML = `<img src="${data.qrImage}" alt="QR Code">`;
+    } else {
+      qrEl.innerHTML = `<div class="empty"><div class="ic">${src.icon}</div><div>${this.t('notUploadedQR')}</div></div>`;
+    }
+    document.getElementById('arcadeScreen').classList.add('active');
+    // Increment scan count only when arcade is actually used
+    data.scanCount = (data.scanCount || 0) + 1;
+    this.save();
+    this.renderHome();
+    if (navigator.wakeLock) navigator.wakeLock.request('screen').catch(() => {});
+  },
+
+  closeArcade() {
+    document.getElementById('arcadeScreen').classList.remove('active');
+  },
+
+  /* ---------- Add/Edit Save Modal ---------- */
+  openSaveModal(id = null) {
+    this.editing = id;
+    this.qrData = null;
+    this.avatarData = null;
+    this.saveType = this.getSources()[0].id;
+
+    if (id) {
+      const s = this.currentData.saveData.find(x => x.id === id);
+      if (!s) return;
+      document.getElementById('saveName').value = s.name;
+      this.saveType = s.type || this.saveType;
+      this.qrData = s.qrImage || null;
+      this.avatarData = s.avatar || null;
+    } else {
+      document.getElementById('saveName').value = '';
+    }
+
+    // Render source selector for current language
+    this.renderSourceSelector();
+    // Update name placeholder
+    const nameInput = document.getElementById('saveName');
+    if (nameInput) nameInput.placeholder = this.getSourcePlaceholder(this.saveType);
+    // Show/hide previews
+    if (this.qrData) this.showQRPreview(this.qrData);
+    else this.hideQRPreview();
+    if (this.avatarData) this.showAvatarPreview(this.avatarData);
+    else this.hideAvatarPreview();
+
+    document.getElementById('saveModal').classList.add('active');
+  },
+
+  showQRPreview(dataUrl) {
+    document.getElementById('saveQRPreview').src = dataUrl;
+    document.getElementById('saveQRPreview').style.display = 'block';
+    document.getElementById('saveQRPlaceholder').style.display = 'none';
+    document.getElementById('saveQRUpload').classList.add('has-image');
+  },
+
+  hideQRPreview() {
+    document.getElementById('saveQRPreview').style.display = 'none';
+    document.getElementById('saveQRPlaceholder').style.display = 'block';
+    document.getElementById('saveQRUpload').classList.remove('has-image');
+  },
+
+  showAvatarPreview(dataUrl) {
+    document.getElementById('saveAvatarPreview').src = dataUrl;
+    document.getElementById('saveAvatarPreview').style.display = 'block';
+    document.getElementById('saveAvatarPlaceholder').style.display = 'none';
+    document.getElementById('saveAvatarUpload').classList.add('has-image');
+  },
+
+  hideAvatarPreview() {
+    document.getElementById('saveAvatarPreview').style.display = 'none';
+    document.getElementById('saveAvatarPlaceholder').style.display = 'block';
+    document.getElementById('saveAvatarUpload').classList.remove('has-image');
+  },
+
+  saveSaveData() {
+    const defaultName = this.getSourceDefaultName(this.saveType);
+    const name = document.getElementById('saveName').value.trim() || defaultName;
+    if (!this.qrData) { this.toast(this.t('toastNoQR'), 'error'); return; }
+
+    const data = {
+      name,
+      qrImage: this.qrData,
+      avatar: this.avatarData || '',
+      type: this.saveType || 'bracelet',
+    };
+
+    if (this.editing) {
+      const idx = this.currentData.saveData.findIndex(s => s.id === this.editing);
+      if (idx >= 0) this.currentData.saveData[idx] = { ...this.currentData.saveData[idx], ...data };
+    } else {
+      this.currentData.saveData.push({
+        id: this.uid(),
+        ...data,
+        scanCount: 0,
+        createdAt: Date.now()
+      });
+    }
+    this.save();
+    this.render();
+    this.closeModal('saveModal');
+    this.toast(this.editing ? this.t('toastUpdated') : this.t('toastSaved'), 'success');
+    this.editing = null;
+  },
+
+  /* ---------- Image handling (with optional crop) ---------- */
+  handleImage(file, callback, withCrop = true) {
+    if (!file) return;
+    if (file.type && !file.type.startsWith('image/')) {
+      this.toast(this.t('toastNotImage'), 'error');
+      return;
+    }
+    if (file.size > 20 * 1024 * 1024) {
+      this.toast(this.t('toastTooBig'), 'error');
+      return;
+    }
+
+    if (!withCrop) {
+      this.toast(this.t('toastProcessing'));
+      const reader = new FileReader();
+      reader.onerror = () => this.toast(this.t('toastReadFail'), 'error');
+      reader.onload = (ev) => {
+        const dataUrl = ev.target.result;
+        const img = new Image();
+        img.onerror = () => { if (callback) callback(dataUrl); };
+        img.onload = () => {
+          try {
+            const maxW = 600;
+            const scale = Math.min(1, maxW / img.width);
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.round(img.width * scale);
+            canvas.height = Math.round(img.height * scale);
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            if (callback) callback(canvas.toDataURL('image/jpeg', 0.9));
+          } catch (err) {
+            if (callback) callback(dataUrl);
+          }
+        };
+        img.src = dataUrl;
+      };
+      reader.readAsDataURL(file);
+      return;
+    }
+
+    this.toast(this.t('toastCropping'));
+    const reader = new FileReader();
+    reader.onerror = () => this.toast(this.t('toastReadFail'), 'error');
+    reader.onload = (ev) => {
+      this.showCropper(ev.target.result, callback);
+    };
+    reader.readAsDataURL(file);
+  },
+
+  showCropper(dataUrl, callback) {
+    this._cropperCallback = callback;
+    const img = document.getElementById('cropperImage');
+    img.onerror = () => {
+      this.toast(this.t('toastCantCrop'), 'error');
+      if (callback) callback(dataUrl);
+      this.hideCropper();
+    };
+    img.onload = () => {
+      if (this._cropper) { this._cropper.destroy(); this._cropper = null; }
+      this._cropper = new Cropper(img, {
+        aspectRatio: 1,
+        viewMode: 1,
+        autoCropArea: 0.85,
+        background: false,
+        responsive: true,
+        restore: false,
+        movable: true,
+        zoomable: true,
+        rotatable: true,
+        scalable: false,
+        minContainerWidth: 320,
+        minContainerHeight: 320,
+      });
+      document.getElementById('cropperModal').classList.add('active');
+    };
+    img.src = dataUrl;
+  },
+
+  hideCropper() {
+    document.getElementById('cropperModal').classList.remove('active');
+    if (this._cropper) { this._cropper.destroy(); this._cropper = null; }
+    this._cropperCallback = null;
+  },
+
+  applyCrop() {
+    if (!this._cropper) return;
+    try {
+      const canvas = this._cropper.getCroppedCanvas({
+        maxWidth: 1200, maxHeight: 1200,
+        minWidth: 200, minHeight: 200,
+        fillColor: '#ffffff',
+        imageSmoothingEnabled: true,
+        imageSmoothingQuality: 'high',
+      });
+      if (!canvas) { this.toast(this.t('toastCropFail'), 'error'); return; }
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+      if (this._cropperCallback) this._cropperCallback(dataUrl);
+      this.hideCropper();
+      this.toast(this.t('toastCropDone'), 'success');
+    } catch (err) {
+      console.error(err);
+      this.toast(this.t('toastCropError'), 'error');
+    }
+  },
+
+  /* ---------- Camera ---------- */
+  async startCameraScan() {
+    try {
+      this.scanStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' }
+      });
+      const video = document.getElementById('scanVideo');
+      video.srcObject = this.scanStream;
+      video.style.display = 'block';
+      document.getElementById('scanPlaceholder').style.display = 'none';
+      document.getElementById('scanFrame').style.display = 'block';
+      document.getElementById('scanHint').style.display = 'block';
+      document.getElementById('scanHint').textContent = this.t('scanHint');
+      video.addEventListener('click', () => this.captureFromVideo());
+    } catch (e) {
+      this.toast(this.t('toastCameraFail'), 'error');
+    }
+  },
+
+  captureFromVideo() {
+    const video = document.getElementById('scanVideo');
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0);
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+    this.stopCameraScan();
+    this.handleCapturedImage(dataUrl);
+  },
+
+  stopCameraScan() {
+    if (this.scanStream) {
+      this.scanStream.getTracks().forEach(t => t.stop());
+      this.scanStream = null;
+    }
+    document.getElementById('scanVideo').style.display = 'none';
+    document.getElementById('scanPlaceholder').style.display = 'block';
+    document.getElementById('scanFrame').style.display = 'none';
+    document.getElementById('scanHint').style.display = 'none';
+  },
+
+  handleCapturedImage(dataUrl) {
+    this.openSaveModal();
+    this.qrData = dataUrl;
+    this.showQRPreview(dataUrl);
+  },
+
+  /* ---------- Import/Export ---------- */
+  exportData() {
+    const blob = new Blob([JSON.stringify(this.data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `oc-dorm-backup-${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    this.toast(this.t('toastExportDone'), 'success');
+  },
+
+  importData(file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target.result);
+        // Handle both old and new formats
+        if (data.saveData && !data.zh && !data.ja) {
+          this.data = { zh: { saveData: data.saveData }, ja: { saveData: [] } };
+        } else {
+          this.data = { zh: { saveData: [] }, ja: { saveData: [] }, ...data };
+        }
+        this.save();
+        this.refreshCurrentData();
+        this.render();
+        this.toast(this.t('toastImportDone'), 'success');
+        this.setView('home');
+      } catch (err) {
+        this.toast(this.t('toastImportFail'), 'error');
+      }
+    };
+    reader.readAsText(file);
+  },
+
+  resetData() {
+    this.confirm(this.t('confirmResetTitle'), this.t('confirmResetText'), () => {
+      this.currentData.saveData = [];
+      this.save();
+      this.render();
+      this.setView('home');
+      this.toast(this.t('toastReset'));
+    });
+  },
+
+  /* ---------- Utils ---------- */
+  toggleFav(id) {
+    // kept for backward compat
+  },
+
+  setView(name) {
+    this.currentView = name;
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    const view = document.getElementById('view-' + name);
+    if (view) view.classList.add('active');
+    window.scrollTo(0, 0);
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    const tab = document.querySelector(`.tab[data-view="${name}"]`);
+    if (tab) tab.classList.add('active');
+    if (name !== 'scan') this.stopCameraScan();
+  },
+
+  closeModal(id) {
+    document.getElementById(id).classList.remove('active');
+    if (id === 'saveModal') this.editing = null;
+  },
+
+  confirm(title, text, onOk) {
+    document.getElementById('confirmTitle').textContent = title;
+    document.getElementById('confirmText').textContent = text;
+    const modal = document.getElementById('confirmModal');
+    modal.classList.add('active');
+    const ok = document.getElementById('confirmOk');
+    const cancel = document.getElementById('confirmCancel');
+    const cleanup = () => {
+      modal.classList.remove('active');
+      ok.removeEventListener('click', okHandler);
+      cancel.removeEventListener('click', cancelHandler);
+    };
+    const okHandler = () => { cleanup(); onOk(); };
+    const cancelHandler = () => cleanup();
+    ok.addEventListener('click', okHandler);
+    cancel.addEventListener('click', cancelHandler);
+  },
+
+  toast(msg, type = '') {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = 'toast show ' + type;
+    clearTimeout(this._toastT);
+    this._toastT = setTimeout(() => el.classList.remove('show'), 2200);
+  },
+
+  escape(s) {
+    if (s == null) return '';
+    return String(s).replace(/[&<>"']/g, c => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[c]));
+  },
+
+  formatDate(ts) {
+    if (!ts) return '—';
+    const d = new Date(ts);
+    return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
+  },
+
+  init() {
+    // 1. Language preference
+    try {
+      const savedLang = localStorage.getItem(LANG_KEY);
+      if (savedLang && I18N[savedLang]) this.lang = savedLang;
+    } catch (e) {}
+
+    // 2. Load data (with internal try-catch)
+    try { this.load(); } catch (e) { console.error('[init:load]', e); }
+
+    // 3. Apply translations
+    try { this.applyLang(); } catch (e) { console.error('[init:applyLang]', e); }
+
+    // Helpers — all bindings go through these so missing elements never crash
+    const bindClick = (id, fn) => {
+      const el = document.getElementById(id);
+      if (el && el.addEventListener) el.addEventListener('click', fn);
+    };
+    const bindChange = (id, fn) => {
+      const el = document.getElementById(id);
+      if (el && el.addEventListener) el.addEventListener('change', fn);
+    };
+    const triggerInput = (inputId) => {
+      const input = document.getElementById(inputId);
+      if (input) input.click();
+    };
+
+    // 4. Tab navigation
+    try {
+      document.querySelectorAll('.tab').forEach(tab => {
+        if (tab && tab.dataset) tab.addEventListener('click', () => this.setView(tab.dataset.view));
+      });
+    } catch (e) { console.error('[init:tabs]', e); }
+
+    // 5. Top buttons
+    bindClick('settingsBtn', () => this.setView('settings'));
+    bindClick('quickAdd', () => this.openSaveModal());
+    bindClick('quickArcade', () => this.setView('arcade-pick'));
+    bindClick('addSaveBtn2', () => this.openSaveModal());
+    bindClick('langBtn', () => { this.setLang(this.lang === 'zh' ? 'ja' : 'zh'); });
+
+    // 6. Modal close
+    try {
+      document.querySelectorAll('[data-close]').forEach(el => {
+        if (el) el.addEventListener('click', () => this.closeModal(el.dataset.close));
+      });
+      document.querySelectorAll('.modal-bg').forEach(bg => {
+        if (bg) bg.addEventListener('click', (e) => { if (e.target === bg) bg.classList.remove('active'); });
+      });
+    } catch (e) { console.error('[init:modals]', e); }
+
+    // 7. Save button
+    bindClick('saveSaveBtn', () => this.saveSaveData());
+
+    // 8. Source selector is rendered dynamically by renderSourceSelector()
+    //    when the save modal opens or the language changes. No init binding needed.
+
+    // 9. QR / Avatar upload binder
+    const bindUpload = (btnId, inputId, preview, isQR = true) => {
+      if (btnId) bindClick(btnId, (e) => { e.stopPropagation(); triggerInput(inputId); });
+      bindChange(inputId, (e) => {
+        const f = e.target.files && e.target.files[0];
+        if (f) this.handleImage(f, (data) => {
+          if (preview === 'qr') { this.qrData = data; this.showQRPreview(data); }
+          else if (preview === 'avatar') { this.avatarData = data; this.showAvatarPreview(data); }
+        }, isQR);
+        e.target.value = '';
+      });
+    };
+    bindUpload('saveQRCamBtn', 'saveQRCamInput', 'qr', true);
+    bindUpload('saveQRGalBtn', 'saveQRInput', 'qr', true);
+    bindUpload('saveAvatarCamBtn', 'saveAvatarCamInput', 'avatar', false);
+    bindUpload('saveAvatarGalBtn', 'saveAvatarInput', 'avatar', false);
+
+    // 10. QR / Avatar area click
+    const qrUpload = document.getElementById('saveQRUpload');
+    if (qrUpload) qrUpload.addEventListener('click', (e) => {
+      if (e.target.closest('.btn') || e.target.closest('button')) return;
+      triggerInput('saveQRInput');
+    });
+    const avUpload = document.getElementById('saveAvatarUpload');
+    if (avUpload) avUpload.addEventListener('click', (e) => {
+      if (e.target.closest('.btn') || e.target.closest('button')) return;
+      triggerInput('saveAvatarInput');
+    });
+
+    // 11. Scan
+    bindClick('scanCameraBtn', () => this.startCameraScan());
+    bindClick('scanGalleryBtn', () => triggerInput('scanGalInput'));
+    bindChange('scanGalInput', (e) => {
+      const f = e.target.files && e.target.files[0];
+      if (f) this.handleImage(f, (data) => this.handleCapturedImage(data), true);
+      e.target.value = '';
+    });
+    bindChange('scanCamInput', (e) => {
+      const f = e.target.files && e.target.files[0];
+      if (f) this.handleImage(f, (data) => this.handleCapturedImage(data), true);
+      e.target.value = '';
+    });
+
+    // 12. Cropper
+    bindClick('cropperClose', () => this.hideCropper());
+    bindClick('cropperCancel', () => { this.hideCropper(); this.toast(this.t('toastCancel')); });
+    bindClick('cropperConfirm', () => this.applyCrop());
+    bindClick('cropperRotate', () => { if (this._cropper) this._cropper.rotate(90); });
+    try {
+      document.querySelectorAll('.cropper-aspect button').forEach(btn => {
+        if (!btn) return;
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.cropper-aspect button').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          if (this._cropper) {
+            const r = btn.dataset.ratio;
+            this._cropper.setAspectRatio(r === 'NaN' ? NaN : parseFloat(r));
+          }
+        });
+      });
+    } catch (e) { console.error('[init:cropper]', e); }
+
+    // 13. Arcade
+    bindClick('arcadeClose', () => this.closeArcade());
+    bindClick('arcadeBright', () => this.toast(this.t('arcadeBrightness')));
+
+    // 14. Settings
+    bindClick('exportBtn', () => this.exportData());
+    bindClick('importBtn', () => triggerInput('importFile'));
+    bindChange('importFile', (e) => {
+      if (e.target.files[0]) this.importData(e.target.files[0]);
+      e.target.value = '';
+    });
+    bindClick('resetBtn', () => this.resetData());
+  }
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  try {
+    App.init();
+  } catch (e) {
+    console.error('[OC宿舍] init failed:', e);
+    // Show user-visible error so it's not silent
+    const body = document.querySelector('.content');
+    const msg = (e && e.stack) ? (e.message + '\n' + e.stack.split('\n').slice(0,3).join('\n')) : (e && e.message) || String(e);
+    if (body) {
+      body.innerHTML = `<div class="empty" style="padding:30px 18px; text-align:left;">
+        <div class="ic" style="color: var(--danger); font-size:32px;">⚠</div>
+        <h3>啟動錯誤</h3>
+        <p>App 初始化失敗，請記下錯誤訊息。<br>建議：手機請到「設定 → Safari → 清除網站資料」或用無痕模式重試。</p>
+        <pre style="font-size:10px; color:var(--danger); background:#fdf0ee; padding:8px; border-radius:8px; overflow-x:auto; white-space:pre-wrap; word-break:break-all; margin:12px 0;">${msg}</pre>
+        <div class="btn" onclick="localStorage.removeItem('aipri-buddy-data-v4'); localStorage.removeItem('aipri-buddy-lang-v1'); location.reload();">清除資料並重試</div>
+        <div class="btn" style="margin-top:6px; background:var(--card); color:var(--ink-2); border:1px solid var(--border);" onclick="location.reload()">重新整理</div>
+      </div>`;
+    }
+  }
+});
+</script>
+
+</body>
+</html>
