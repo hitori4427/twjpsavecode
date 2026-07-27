@@ -1956,19 +1956,14 @@ const App = {
     try {
       this.data[this.lang] = this.currentData;
       const json = JSON.stringify(this.data);
-      // Check size: iPhone Safari limit is ~5MB. Warn at 4MB.
-      const sizeMB = json.length / (1024 * 1024);
-      if (sizeMB > 4.5) {
-        this.toast(this.t('toastStorageFull'), 'error');
-        this._storageError = true;
-        return false;
-      }
       localStorage.setItem(STORAGE_KEY, json);
       this._storageError = false;
       return true;
     } catch (e) {
-      this.toast(this.t('toastStorageFull'), 'error');
       this._storageError = true;
+      // SetItem threw (quota exceeded or similar). Show a non-blocking error
+      // and return false so callers can keep the modal open.
+      try { this.toast(this.t('toastStorageFull'), 'error', 5000); } catch (te) {}
       return false;
     }
   },
@@ -2315,39 +2310,61 @@ const App = {
   },
 
   saveSaveData() {
-    const defaultName = this.getSourceDefaultName(this.saveType);
-    const name = document.getElementById('saveName').value.trim() || defaultName;
-    if (!this.qrData) { this.toast(this.t('toastNoQR'), 'error'); this.shakeQR(); return; }
+    try {
+      const btn = document.getElementById('saveSaveBtn');
+      const originalText = btn ? btn.textContent : '';
+      if (btn) { btn.textContent = '儲存中…'; btn.disabled = true; }
 
-    const data = {
-      name,
-      qrImage: this.qrData,
-      avatar: this.avatarData || '',
-      type: this.saveType || 'bracelet',
-    };
+      console.log('[saveSaveData] start, qrData:', !!this.qrData, 'avatar:', !!this.avatarData);
+      const defaultName = this.getSourceDefaultName(this.saveType);
+      const name = document.getElementById('saveName').value.trim() || defaultName;
+      if (!this.qrData) {
+        this.toast(this.t('toastNoQR'), 'error');
+        this.shakeQR();
+        if (btn) { btn.textContent = originalText; btn.disabled = false; }
+        return;
+      }
 
-    if (this.editing) {
-      const idx = this.currentData.saveData.findIndex(s => s.id === this.editing);
-      if (idx >= 0) this.currentData.saveData[idx] = { ...this.currentData.saveData[idx], ...data };
-    } else {
-      this.currentData.saveData.push({
-        id: this.uid(),
-        ...data,
-        scanCount: 0,
-        createdAt: Date.now()
-      });
+      const data = {
+        name,
+        qrImage: this.qrData,
+        avatar: this.avatarData || '',
+        type: this.saveType || 'bracelet',
+      };
+
+      if (this.editing) {
+        const idx = this.currentData.saveData.findIndex(s => s.id === this.editing);
+        if (idx >= 0) this.currentData.saveData[idx] = { ...this.currentData.saveData[idx], ...data };
+      } else {
+        this.currentData.saveData.push({
+          id: this.uid(),
+          ...data,
+          scanCount: 0,
+          createdAt: Date.now()
+        });
+      }
+      console.log('[saveSaveData] calling save()...');
+      const ok = this.save();
+      console.log('[saveSaveData] save() returned:', ok);
+      if (!ok) {
+        this.toast(this.t('toastStorageFull'), 'error', 5000);
+        this.showStorageFullError();
+        if (btn) { btn.textContent = originalText; btn.disabled = false; }
+        return;
+      }
+      console.log('[saveSaveData] calling render()...');
+      this.render();
+      console.log('[saveSaveData] calling closeModal()...');
+      this.closeModal('saveModal');
+      this.toast(this.editing ? this.t('toastUpdated') : this.t('toastSaved'), 'success');
+      this.editing = null;
+      console.log('[saveSaveData] done');
+    } catch (err) {
+      console.error('[saveSaveData] ERROR:', err);
+      this.toast('儲存失敗: ' + (err && err.message ? err.message : err), 'error', 6000);
+      const btn = document.getElementById('saveSaveBtn');
+      if (btn) { btn.disabled = false; btn.textContent = '儲存'; }
     }
-    const ok = this.save();
-    if (!ok) {
-      // Save failed (storage full). Keep modal open and show a clear error banner.
-      this.toast(this.t('toastStorageFull'), 'error');
-      this.showStorageFullError();
-      return;
-    }
-    this.render();
-    this.closeModal('saveModal');
-    this.toast(this.editing ? this.t('toastUpdated') : this.t('toastSaved'), 'success');
-    this.editing = null;
   },
 
   showStorageFullError() {
