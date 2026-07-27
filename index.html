@@ -1057,9 +1057,10 @@
 </style>
 </head>
 <body>
+<div id="versionBadge" style="position:fixed; top:4px; right:4px; z-index:9999; background:#000; color:#fff; font-size:9px; padding:2px 6px; border-radius:4px; font-family:monospace; pointer-events:none;">v2.4.10</div>
 
 <div class="app">
-  <!-- OC宿舍 v2.4 — per-language source types (JA: 4 sources) build -->
+  <!-- OC宿舍 v2.4.10 — defensive renderHome + visible version badge build -->
   <div class="topbar">
     <div class="brand">
       <div class="logo">O</div>
@@ -2031,11 +2032,13 @@ const App = {
   },
 
   renderHome() {
-    const saves = this.currentData.saveData;
+    const saves = this.currentData.saveData || [];
     const totalScans = saves.reduce((s, x) => s + (x.scanCount || 0), 0);
 
-    document.getElementById('heroCount').textContent = saves.length;
-    document.getElementById('heroScans').textContent = totalScans;
+    const heroCount = document.getElementById('heroCount');
+    const heroScans = document.getElementById('heroScans');
+    if (heroCount) heroCount.textContent = saves.length;
+    if (heroScans) heroScans.textContent = totalScans;
 
     const saveList = document.getElementById('saveList');
     if (saves.length === 0) {
