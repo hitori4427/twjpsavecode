@@ -1212,6 +1212,16 @@
             </div>
             <div class="arrow">→</div>
           </div>
+          <div class="settings-item" id="factoryResetBtn" style="color: #8b0000; background: #fdf0ee;">
+            <div class="ic" style="background: #8b0000; color: white;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 L2 7 L12 12 L22 7 L12 2 z M2 17 L12 22 L22 17 M2 12 L12 17 L22 12"/></svg>
+            </div>
+            <div class="info">
+              <div class="t">🚨 工廠重置</div>
+              <div class="s">清掉所有語言、所有資料 · App 回到全新狀態</div>
+            </div>
+            <div class="arrow">→</div>
+          </div>
         </div>
       </div>
 
@@ -2307,7 +2317,7 @@ const App = {
   saveSaveData() {
     const defaultName = this.getSourceDefaultName(this.saveType);
     const name = document.getElementById('saveName').value.trim() || defaultName;
-    if (!this.qrData) { this.toast(this.t('toastNoQR'), 'error'); return; }
+    if (!this.qrData) { this.toast(this.t('toastNoQR'), 'error'); this.shakeQR(); return; }
 
     const data = {
       name,
@@ -2327,11 +2337,68 @@ const App = {
         createdAt: Date.now()
       });
     }
-    this.save();
+    const ok = this.save();
+    if (!ok) {
+      // Save failed (storage full). Keep modal open and show a clear error banner.
+      this.toast(this.t('toastStorageFull'), 'error');
+      this.showStorageFullError();
+      return;
+    }
     this.render();
     this.closeModal('saveModal');
     this.toast(this.editing ? this.t('toastUpdated') : this.t('toastSaved'), 'success');
     this.editing = null;
+  },
+
+  showStorageFullError() {
+    // Show a prominent error banner inside the save modal
+    const existing = document.getElementById('saveStorageError');
+    if (existing) existing.remove();
+    const info = this.getStorageInfo();
+    const banner = document.createElement('div');
+    banner.id = 'saveStorageError';
+    banner.style.cssText = 'background: #fdf0ee; border: 2px solid var(--danger); border-radius: 10px; padding: 12px; margin: 0 20px 12px; font-size: 12px; color: var(--danger);';
+    banner.innerHTML = `
+      <strong style="display: block; margin-bottom: 6px;">⛔️ 儲存空間已滿</strong>
+      <div style="color: var(--ink-2); line-height: 1.5; margin-bottom: 8px;">
+        目前 ${info.usedMB.toFixed(2)} / ${info.limitMB} MB，新存檔無法儲存。<br>
+        請到「設定」匯出備份後刪除舊存檔。
+      </div>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <button id="goSettingsBtn" style="flex: 1; min-width: 100px; padding: 8px; background: var(--ink); color: white; border-radius: 8px; font-size: 12px; font-weight: 500;">前往設定</button>
+        <button id="forceClearBtn" style="flex: 1; min-width: 100px; padding: 8px; background: var(--danger); color: white; border-radius: 8px; font-size: 12px; font-weight: 500;">強制清空重試</button>
+        <button id="dismissStorageErr" style="padding: 8px 12px; background: white; color: var(--ink-2); border: 1px solid var(--border); border-radius: 8px; font-size: 12px;">關閉</button>
+      </div>
+    `;
+    const modal = document.getElementById('saveModal');
+    if (modal) {
+      const modalEl = modal.querySelector('.modal');
+      if (modalEl) {
+        const btnRow = modalEl.querySelector('.btn-row');
+        if (btnRow) modalEl.insertBefore(banner, btnRow);
+        else modalEl.appendChild(banner);
+      }
+    }
+    const goBtn = document.getElementById('goSettingsBtn');
+    if (goBtn) goBtn.addEventListener('click', () => {
+      this.closeModal('saveModal');
+      this.editing = null;
+      this.setView('settings');
+    });
+    const dismissBtn = document.getElementById('dismissStorageErr');
+    if (dismissBtn) dismissBtn.addEventListener('click', () => banner.remove());
+    const forceClear = document.getElementById('forceClearBtn');
+    if (forceClear) forceClear.addEventListener('click', () => {
+      if (confirm('確定要刪除目前語言所有存檔嗎？建議先匯出備份。')) {
+        this.currentData.saveData = [];
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data)); } catch (e) {}
+        banner.remove();
+        this.closeModal('saveModal');
+        this.editing = null;
+        this.toast('已清空 · 請重試上傳', 'success');
+        this.render();
+      }
+    });
   },
 
   /* ---------- Image handling (with optional crop) ---------- */
@@ -2518,23 +2585,66 @@ const App = {
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
-        const data = JSON.parse(e.target.result);
-        // Handle both old and new formats
-        if (data.saveData && !data.zh && !data.ja) {
-          this.data = { zh: { saveData: data.saveData }, ja: { saveData: [] } };
-        } else {
-          this.data = { zh: { saveData: [] }, ja: { saveData: [] }, ...data };
+        let text = e.target.result;
+        if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+        const data = JSON.parse(text);
+        const saves = this._extractSaves(data);
+        if (!saves || !Array.isArray(saves)) {
+          this.toast(this.t('toastImportFail'), 'error');
+          return;
         }
+        const clean = saves.filter(s => s && (s.name || s.qrImage || s.avatar));
+        if (clean.length === 0) {
+          this.toast(this.t('toastImportFail'), 'error');
+          return;
+        }
+        this.data = { zh: { saveData: clean }, ja: { saveData: [] } };
         this.save();
         this.refreshCurrentData();
         this.render();
-        this.toast(this.t('toastImportDone'), 'success');
+        this.toast(this.t('toastImportDone') + ' (' + clean.length + ')', 'success');
         this.setView('home');
       } catch (err) {
+        console.error('[import]', err);
         this.toast(this.t('toastImportFail'), 'error');
       }
     };
     reader.readAsText(file);
+  },
+
+  _extractSaves(obj, depth) {
+    if (depth === undefined) depth = 0;
+    if (depth > 5) return null;
+    if (!obj || typeof obj !== 'object') return null;
+    if (Array.isArray(obj)) {
+      if (obj.length > 0 && typeof obj[0] === 'object' && (obj[0].name || obj[0].qrImage || obj[0].id)) {
+        return obj;
+      }
+      return null;
+    }
+    for (const k of ['saveData', 'saves', 'data', 'items', 'list']) {
+      if (obj[k]) {
+        const r = this._extractSaves(obj[k], depth + 1);
+        if (r) return r;
+      }
+    }
+    for (const k in obj) {
+      const r = this._extractSaves(obj[k], depth + 1);
+      if (r) return r;
+    }
+    return null;
+  },
+
+  factoryReset() {
+    try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+    try { localStorage.removeItem(LANG_KEY); } catch (e) {}
+    this.data = { zh: { saveData: [] }, ja: { saveData: [] } };
+    this.currentData = this.data.zh;
+    this.lang = 'zh';
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data)); } catch (e) {}
+    this.applyLang();
+    this.setView('home');
+    this.toast('工廠重置完成 · 全部清空', 'success');
   },
 
   resetData() {
@@ -2566,7 +2676,12 @@ const App = {
 
   closeModal(id) {
     document.getElementById(id).classList.remove('active');
-    if (id === 'saveModal') this.editing = null;
+    if (id === 'saveModal') {
+      this.editing = null;
+      // Clear any in-modal error banners
+      const err = document.getElementById('saveStorageError');
+      if (err) err.remove();
+    }
   },
 
   confirm(title, text, onOk) {
@@ -2598,12 +2713,12 @@ const App = {
     }
   },
 
-  toast(msg, type = '') {
+  toast(msg, type = '', duration = 3500) {
     const el = document.getElementById('toast');
     el.textContent = msg;
     el.className = 'toast show ' + type;
     clearTimeout(this._toastT);
-    this._toastT = setTimeout(() => el.classList.remove('show'), 2200);
+    this._toastT = setTimeout(() => el.classList.remove('show'), duration);
   },
 
   escape(s) {
@@ -2750,6 +2865,11 @@ const App = {
       e.target.value = '';
     });
     bindClick('resetBtn', () => this.resetData());
+    bindClick('factoryResetBtn', () => {
+      if (confirm('確定要工廠重置？\\n\\n這會刪除所有語言的存檔、語言設定、LocalStorage。\\n\\nApp 會回到全新空狀態。')) {
+        this.factoryReset();
+      }
+    });
   }
 };
 
