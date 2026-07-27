@@ -464,6 +464,18 @@
   }
   .img-upload.qr .placeholder { padding: 24px 16px; }
   .img-upload.qr .placeholder .ic { font-size: 32px; }
+  .img-upload.shake-error {
+    animation: shakeError 0.4s ease-in-out;
+    border-color: var(--danger) !important;
+    background: #fdf0ee;
+  }
+  @keyframes shakeError {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-8px); }
+    40% { transform: translateX(8px); }
+    60% { transform: translateX(-5px); }
+    80% { transform: translateX(5px); }
+  }
   .qr-upload-btns {
     display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px;
     max-width: 320px; margin-left: auto; margin-right: auto;
@@ -1147,6 +1159,26 @@
 
     <div class="view" id="view-settings">
       <div class="settings-section">
+        <h3 id="settingsStorageLabel">儲存空間</h3>
+        <div class="settings-list">
+          <div class="settings-item" style="cursor: default; flex-direction: column; align-items: stretch; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div class="ic" style="background: var(--purple-soft); color: var(--purple);">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+              </div>
+              <div class="info" style="flex: 1;">
+                <div class="t" id="storageUsageText">0 MB / 5 MB</div>
+                <div class="s" id="storageUsageSub">iPhone 預設上限 · QR 圖片 1 張約 0.1 MB</div>
+              </div>
+            </div>
+            <div style="background: var(--bg-soft); border-radius: 6px; height: 8px; overflow: hidden; margin: 4px 0;">
+              <div id="storageBar" style="height: 100%; background: linear-gradient(90deg, var(--success), var(--gold), var(--danger)); width: 0%; transition: width 0.3s;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
         <h3 id="settingsDataLabel">資料管理</h3>
         <div class="settings-list">
           <div class="settings-item" id="exportBtn">
@@ -1284,8 +1316,12 @@
         <label id="nameLabel">暱稱</label>
         <input type="text" id="saveName" placeholder="例如：我的陽葵款手環">
       </div>
+      <div id="storageWarning" style="display:none; background: #fdf0ee; border: 1px solid var(--danger); border-radius: 10px; padding: 10px 12px; margin-bottom: 12px; font-size: 12px; color: var(--danger);">
+        <strong id="storageWarningTitle">⚠️ 儲存空間即將用完</strong>
+        <div id="storageWarningText" style="margin-top: 4px; line-height: 1.5; color: var(--ink-2);">iPhone 儲存上限約 5MB，QR 圖片太多會爆。請到「設定」匯出後刪除舊存檔。</div>
+      </div>
       <div class="field">
-        <label id="qrLabel">QR Code 圖片 *</label>
+        <label id="qrLabel" style="color: var(--danger);">QR Code 圖片 必填 *</label>
         <div class="qr-upload-wrap">
           <div class="img-upload qr" id="saveQRUpload">
             <div class="placeholder" id="saveQRPlaceholder">
@@ -1442,7 +1478,7 @@ const I18N = {
     nameDefaultFriendCard: '我的朋友卡',
     nameDefaultLine: '我的 LINE ID',
     nameDefaultOther: '我的存檔',
-    qrLabel: 'QR Code 圖片 *',
+    qrLabel: 'QR Code 圖片 (必填)',
     qrPlaceholderTitle: '拍下或選取 QR Code',
     qrPlaceholderSub: '原圖保存，機台前 1:1 顯示<br>（手環掉了也能救回）',
     qrCamBtn: '拍照',
@@ -1480,6 +1516,13 @@ const I18N = {
     scanHint: '點擊畫面拍照',
     settingsData: '資料管理',
     settingsAbout: '關於',
+    settingsStorage: '儲存空間',
+    storageUsageText: (used, limit) => `${used} MB / ${limit} MB`,
+    storageUsageSub: (perQR) => `iPhone 預設上限 · QR 圖片 1 張約 ${perQR} MB`,
+    storageUsageSubNoData: '使用情形 依你的存檔數量而異',
+    storageWarningTitle: '⚠️ 儲存空間即將用完',
+    storageWarningTitleFull: '⛔️ 儲存空間已滿',
+    storageWarningText: (used, limit) => `目前 ${used} / ${limit} MB，新存檔可能無法儲存。請到「設定」匯出後刪除舊存檔。`,
     exportTitle: '匯出全部資料',
     exportSub: '備份所有語言的存檔（圖片以 base64 內嵌）',
     importTitle: '匯入資料',
@@ -1520,7 +1563,7 @@ const I18N = {
     toastImportDone: '匯入成功！',
     toastImportFail: '檔案格式不正確',
     toastReset: '已清除目前語言資料',
-    toastStorageFull: '儲存空間不足，請減少圖片數量',
+    toastStorageFull: '容量已滿 · 請匯出後刪除舊存檔',
     toastProcessing: '處理圖片中…',
     toastCropping: '準備裁切…',
     toastCantCrop: '此格式無法裁切，使用原圖',
@@ -1588,7 +1631,7 @@ const I18N = {
     nameDefaultFriendCard: '私のフレンドカード',
     nameDefaultLine: '私のLINE ID',
     nameDefaultOther: '私のセーブ',
-    qrLabel: 'QRコード画像 *',
+    qrLabel: 'QRコード画像 (必須)',
     qrPlaceholderTitle: 'QRを撮影または選択',
     qrPlaceholderSub: '原寸で保存 · ゲーム機で1:1表示',
     qrCamBtn: '撮影',
@@ -1626,6 +1669,13 @@ const I18N = {
     scanHint: '画面タップで撮影',
     settingsData: 'データ管理',
     settingsAbout: 'このアプリ',
+    settingsStorage: 'ストレージ',
+    storageUsageText: (used, limit) => `${used} MB / ${limit} MB`,
+    storageUsageSub: (perQR) => `iPhoneの保存上限 · QR画像 1枚約 ${perQR} MB`,
+    storageUsageSubNoData: '保存容量はセーブデータに依る',
+    storageWarningTitle: '⚠️ 保存容量があと少し',
+    storageWarningTitleFull: '⛔️ 保存容量がいっぱいです',
+    storageWarningText: (used, limit) => `現在 ${used} / ${limit} MB · 新規保存できない可能性。設定からエクスポートして古いデータを削除してください。`,
     exportTitle: '全データをエクスポート',
     exportSub: '全言語のセーブをJSON出力（画像含む）',
     importTitle: 'インポート',
@@ -1666,7 +1716,7 @@ const I18N = {
     toastImportDone: 'インポート成功！',
     toastImportFail: 'ファイル形式エラー',
     toastReset: 'この言語のデータを削除しました',
-    toastStorageFull: '容量不足 · 画像を削減してください',
+    toastStorageFull: '容量オーバー · エクスポートして古いデータを削除',
     toastProcessing: '処理中…',
     toastCropping: 'トリミング準備…',
     toastCantCrop: 'この形式はトリミング不可 · 原寸使用',
@@ -1805,6 +1855,9 @@ const App = {
       scanHint: 'scanHint',
       scanTipText: 'scanTip',
       settingsDataLabel: 'settingsData',
+      settingsStorageLabel: 'settingsStorage',
+      storageUsageText: 'storageUsageText',
+      storageUsageSub: 'storageUsageSub',
       exportTitle: 'exportTitle',
       exportSub: 'exportSub',
       importTitle: 'importTitle',
@@ -1892,10 +1945,32 @@ const App = {
   save() {
     try {
       this.data[this.lang] = this.currentData;
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
+      const json = JSON.stringify(this.data);
+      // Check size: iPhone Safari limit is ~5MB. Warn at 4MB.
+      const sizeMB = json.length / (1024 * 1024);
+      if (sizeMB > 4.5) {
+        this.toast(this.t('toastStorageFull'), 'error');
+        this._storageError = true;
+        return false;
+      }
+      localStorage.setItem(STORAGE_KEY, json);
+      this._storageError = false;
+      return true;
     } catch (e) {
       this.toast(this.t('toastStorageFull'), 'error');
+      this._storageError = true;
+      return false;
     }
+  },
+
+  getStorageInfo() {
+    let used = 0;
+    try { used = (localStorage.getItem(STORAGE_KEY) || '').length; } catch (e) {}
+    const usedMB = used / (1024 * 1024);
+    // iPhone Safari typically allows ~5MB per origin
+    const limitMB = 5;
+    const percent = Math.min(100, Math.round((usedMB / limitMB) * 100));
+    return { usedMB, limitMB, percent };
   },
 
   seed() { return { saveData: [] }; },
@@ -1905,6 +1980,7 @@ const App = {
     this.renderArcadePickList();
     this.renderHeroStats();
     this.renderSourceSelector();
+    this.renderStorageInfo();
   },
 
   renderHeroStats() {
@@ -1971,6 +2047,25 @@ const App = {
         el.addEventListener('click', () => this.openDetail(el.dataset.id));
       });
     }
+  },
+
+  renderStorageInfo() {
+    const info = this.getStorageInfo();
+    const textEl = document.getElementById('storageUsageText');
+    const subEl = document.getElementById('storageUsageSub');
+    const barEl = document.getElementById('storageBar');
+    if (textEl) textEl.textContent = this.t('storageUsageText', info.usedMB.toFixed(2), info.limitMB);
+    if (subEl) {
+      // Estimate per-save size
+      const saves = (this.data.zh?.saveData?.length || 0) + (this.data.ja?.saveData?.length || 0);
+      if (saves > 0) {
+        const perSave = (info.usedMB / saves).toFixed(2);
+        subEl.textContent = this.t('storageUsageSub', perSave);
+      } else {
+        subEl.textContent = this.t('storageUsageSubNoData');
+      }
+    }
+    if (barEl) barEl.style.width = info.percent + '%';
   },
 
   saveItemHTML(s) {
@@ -2165,6 +2260,21 @@ const App = {
     if (this.avatarData) this.showAvatarPreview(this.avatarData);
     else this.hideAvatarPreview();
 
+    // Show storage warning if nearly full
+    const info = this.getStorageInfo();
+    const warn = document.getElementById('storageWarning');
+    if (warn) {
+      if (info.percent >= 80) {
+        warn.style.display = 'block';
+        const titleEl = document.getElementById('storageWarningTitle');
+        const textEl = document.getElementById('storageWarningText');
+        if (titleEl) titleEl.textContent = info.percent >= 95 ? this.t('storageWarningTitleFull') : this.t('storageWarningTitle');
+        if (textEl) textEl.textContent = this.t('storageWarningText', info.usedMB.toFixed(2), info.limitMB);
+      } else {
+        warn.style.display = 'none';
+      }
+    }
+
     document.getElementById('saveModal').classList.add('active');
   },
 
@@ -2246,7 +2356,7 @@ const App = {
         img.onerror = () => { if (callback) callback(dataUrl); };
         img.onload = () => {
           try {
-            const maxW = 600;
+            const maxW = 400;
             const scale = Math.min(1, maxW / img.width);
             const canvas = document.createElement('canvas');
             canvas.width = Math.round(img.width * scale);
@@ -2255,7 +2365,7 @@ const App = {
             ctx.fillStyle = 'white';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            if (callback) callback(canvas.toDataURL('image/jpeg', 0.9));
+            if (callback) callback(canvas.toDataURL('image/jpeg', 0.8));
           } catch (err) {
             if (callback) callback(dataUrl);
           }
@@ -2277,6 +2387,7 @@ const App = {
 
   showCropper(dataUrl, callback) {
     this._cropperCallback = callback;
+    this._cropperSource = dataUrl;
     const img = document.getElementById('cropperImage');
     img.onerror = () => {
       this.toast(this.t('toastCantCrop'), 'error');
@@ -2314,20 +2425,33 @@ const App = {
     if (!this._cropper) return;
     try {
       const canvas = this._cropper.getCroppedCanvas({
-        maxWidth: 1200, maxHeight: 1200,
+        maxWidth: 800, maxHeight: 800,
         minWidth: 200, minHeight: 200,
         fillColor: '#ffffff',
         imageSmoothingEnabled: true,
         imageSmoothingQuality: 'high',
       });
-      if (!canvas) { this.toast(this.t('toastCropFail'), 'error'); return; }
-      const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+      if (!canvas) {
+        this.toast(this.t('toastCropFail'), 'error');
+        // Fallback: use original image
+        if (this._cropperCallback && this._cropperSource) {
+          this._cropperCallback(this._cropperSource);
+        }
+        this.hideCropper();
+        return;
+      }
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
       if (this._cropperCallback) this._cropperCallback(dataUrl);
       this.hideCropper();
       this.toast(this.t('toastCropDone'), 'success');
     } catch (err) {
       console.error(err);
       this.toast(this.t('toastCropError'), 'error');
+      // Fallback: use original image
+      if (this._cropperCallback && this._cropperSource) {
+        try { this._cropperCallback(this._cropperSource); } catch (e) {}
+      }
+      this.hideCropper();
     }
   },
 
@@ -2461,6 +2585,17 @@ const App = {
     const cancelHandler = () => cleanup();
     ok.addEventListener('click', okHandler);
     cancel.addEventListener('click', cancelHandler);
+  },
+
+  shakeQR() {
+    const qr = document.getElementById('saveQRUpload');
+    if (qr) {
+      qr.classList.remove('shake-error');
+      void qr.offsetWidth; // force reflow
+      qr.classList.add('shake-error');
+      setTimeout(() => qr.classList.remove('shake-error'), 600);
+      try { qr.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
+    }
   },
 
   toast(msg, type = '') {
